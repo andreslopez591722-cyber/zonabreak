@@ -1,0 +1,150 @@
+═══════════════════════════════════════════════════════════════
+   ZONA BREAK — Sistema de Gestión de Restaurante v7.0
+   Node.js + Express + MongoDB + Socket.io
+═══════════════════════════════════════════════════════════════
+
+═══════════════════════════════════════════════════════════════
+  PASO 1 — REQUISITOS PREVIOS
+═══════════════════════════════════════════════════════════════
+
+  • Node.js 18 o superior  → https://nodejs.org
+  • MongoDB Community       → https://www.mongodb.com/try/download/community
+    (o usa MongoDB Atlas gratis en la nube → https://cloud.mongodb.com)
+
+─────────────────────────────────────────────────────────────
+  PASO 2 — CONFIGURAR LAS VARIABLES DE ENTORNO
+─────────────────────────────────────────────────────────────
+
+  1. Copia el archivo de ejemplo:
+       cp .env.example .env   (Mac/Linux)
+       copy .env.example .env (Windows)
+
+  2. Abre el archivo .env y edita:
+
+     PORT=3000
+     MONGODB_URI=mongodb://127.0.0.1:27017/zonabreak
+     JWT_SECRET=pon_aqui_una_clave_segura_larga
+     ADMIN_USER=admin
+     ADMIN_PASS=zonabreak123
+
+     # Números de WhatsApp (solo dígitos, con código de país)
+     # Ejemplo Colombia: 573001234567
+     WHATSAPP_COCINA=573001234567
+     WHATSAPP_CAJA=573009876543
+     WHATSAPP_ADMIN=573015997670
+
+─────────────────────────────────────────────────────────────
+  PASO 3 — INSTALAR DEPENDENCIAS
+─────────────────────────────────────────────────────────────
+
+  Abre una terminal en la carpeta del proyecto y ejecuta:
+
+    npm install
+
+─────────────────────────────────────────────────────────────
+  PASO 4 — CARGAR DATOS DE EJEMPLO (solo la primera vez)
+─────────────────────────────────────────────────────────────
+
+  Este paso carga todos los productos del menú, el inventario,
+  los socios (Jesús 30%, Didier 20%, Marlon 50%) y 2 domiciliarios.
+
+    npm run seed
+
+─────────────────────────────────────────────────────────────
+  PASO 5 — INICIAR EL SERVIDOR
+─────────────────────────────────────────────────────────────
+
+  Producción:
+    npm start
+
+  Desarrollo (recarga automática al editar):
+    npm run dev
+
+═══════════════════════════════════════════════════════════════
+  ACCESOS AL SISTEMA
+═══════════════════════════════════════════════════════════════
+
+  Menú para clientes  →  http://localhost:3000/
+  POS (punto de venta)→  http://localhost:3000/pos.html
+  Panel Admin         →  http://localhost:3000/admin.html
+
+─────────────────────────────────────────────────────────────
+  CONTRASEÑAS
+─────────────────────────────────────────────────────────────
+
+  Admin:   usuario: admin      / contraseña: zonabreak123
+  POS:     usuario: marlon     / contraseña: marlon123
+  POS:     usuario: jesus      / contraseña: jesus123
+  POS:     usuario: didier     / contraseña: didier123
+
+═══════════════════════════════════════════════════════════════
+  MÓDULOS INCLUIDOS
+═══════════════════════════════════════════════════════════════
+
+  1. MENÚ PÚBLICO (/ index.html)
+     • Catálogo completo con categorías (hamburguesas, perros,
+       picadas, extras, bebidas, cocteles, sin alcohol)
+     • Carrito de compras
+     • Filtro por categoría
+     • Enviar pedido directamente a Cocina / Caja / Admin por WhatsApp
+     • Guardar pedido en base de datos
+
+  2. POS — PUNTO DE VENTA (/pos.html)
+     • Login por usuario (marlon, jesus, didier)
+     • Filtro por categoría + búsqueda de producto
+     • Canal: Local / Rappi / Domicilio propio
+     • Asignar domiciliario al pedido
+     • Cobro con múltiples formas de pago
+     • Cargo de servicio 8% opcional
+     • Imprimir ticket térmico (ventana imprimible)
+     • Enviar pedido por WhatsApp (Cocina, Caja, Admin)
+     • Descuento automático de inventario al vender
+     • Notificaciones en tiempo real (Socket.io)
+
+  3. PANEL ADMIN (/admin.html)
+     • PEDIDOS: ver en tiempo real, cambiar estado
+     • PRODUCTOS: crear, desactivar
+     • INVENTARIO: editar stock, mínimos, costo. Registrar merma
+     • SOCIOS: porcentajes editables, distribución automática
+       de utilidades (Jesús 30%, Didier 20%, Marlon 50%)
+     • DELIVERY: domiciliarios, estadísticas por canal y por repartidor
+     • CONTABILIDAD: ingresos, gastos, utilidad neta
+       Filtro por: Hoy / Semana / Mes
+
+═══════════════════════════════════════════════════════════════
+  TECNOLOGÍA
+═══════════════════════════════════════════════════════════════
+
+  Backend:   Node.js 18+ · Express 4 · Mongoose · Socket.io · JWT
+  Frontend:  HTML5 · CSS3 · JavaScript Vanilla (sin frameworks)
+  Base de datos: MongoDB (local o Atlas)
+  Diseño:    Negro + Dorado · Fuentes Barlow Condensed + DM Sans
+
+═══════════════════════════════════════════════════════════════
+  MONGODB ATLAS (si no tienes MongoDB local)
+═══════════════════════════════════════════════════════════════
+
+  1. Ve a https://cloud.mongodb.com y crea una cuenta gratis
+  2. Crea un cluster gratuito (M0 Free Tier)
+  3. En "Connect" → "Drivers" copia el URI de conexión
+  4. Pégalo en tu .env como MONGODB_URI=<tu-uri-de-atlas>
+
+═══════════════════════════════════════════════════════════════
+  ERRORES COMUNES
+═══════════════════════════════════════════════════════════════
+
+  Error: ECONNREFUSED 127.0.0.1:27017
+  → MongoDB no está corriendo. Inícialo con: mongod
+    (o usa MongoDB Atlas en la nube)
+
+  Error: Cannot find module 'express'
+  → Ejecuta: npm install
+
+  Pantalla en blanco en el menú
+  → Asegúrate de haber ejecutado: npm run seed
+
+  WhatsApp no abre
+  → Revisa los números en el .env. Deben ser solo dígitos
+    con código de país (ej: 573001234567 para Colombia)
+
+═══════════════════════════════════════════════════════════════

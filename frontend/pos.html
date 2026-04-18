@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Zona Break — POS</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/css/brand.css" />
+  <style>
+    /* ── LOGIN ─────────────────────────────────────────── */
+    #login {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: radial-gradient(ellipse at center, rgba(201,162,39,.1), var(--zb-black));
+    }
+    .login-box {
+      width: 100%;
+      max-width: 380px;
+      padding: 32px;
+      border-radius: var(--radius);
+      border: 1px solid rgba(201,162,39,.25);
+      background: var(--zb-black2);
+      box-shadow: 0 20px 60px rgba(0,0,0,.6);
+    }
+    /* ── LAYOUT ─────────────────────────────────────────── */
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 16px;
+      max-width: 1250px;
+      margin: 0 auto;
+      padding: 14px;
+      min-height: calc(100vh - 60px);
+    }
+    @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+
+    /* ── FILTROS ─────────────────────────────────────────── */
+    .cats-pos {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+      scrollbar-width: none;
+    }
+    .cats-pos::-webkit-scrollbar { display: none; }
+    .cat-pos {
+      flex-shrink: 0;
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(201,162,39,.25);
+      background: transparent;
+      color: var(--zb-muted);
+      font-family: var(--font-display);
+      font-size: .72rem;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      cursor: pointer;
+      transition: all .18s;
+      white-space: nowrap;
+    }
+    .cat-pos.on, .cat-pos:hover {
+      background: var(--zb-gold);
+      color: var(--zb-black);
+      border-color: var(--zb-gold);
+    }
+
+    /* ── GRID POS ───────────────────────────────────────── */
+    .grid-pos {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 10px;
+    }
+    .pos-card {
+      background: var(--zb-black2);
+      border: 1px solid rgba(201,162,39,.1);
+      border-radius: 12px;
+      padding: 12px 10px;
+      cursor: pointer;
+      text-align: center;
+      transition: transform .18s, border-color .18s, background .18s;
+      user-select: none;
+    }
+    .pos-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(201,162,39,.4);
+      background: var(--zb-black3);
+    }
+    .pos-card:active { transform: scale(.96); }
+    .pos-emoji { font-size: 2rem; margin-bottom: 6px; }
+    .pos-name { font-family: var(--font-display); font-size: .82rem; font-weight: 800; line-height: 1.2; }
+    .pos-price { color: var(--zb-gold2); font-family: var(--font-display); font-weight: 700; font-size: .85rem; margin-top: 5px; }
+
+    /* ── PANEL ORDEN ──────────────────────────────────────── */
+    .order-panel {
+      position: sticky;
+      top: 72px;
+      align-self: start;
+      border: 1px solid rgba(201,162,39,.18);
+      border-radius: 14px;
+      padding: 16px;
+      background: var(--zb-black2);
+      max-height: calc(100vh - 96px);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .order-title {
+      font-family: var(--font-display);
+      color: var(--zb-gold2);
+      font-size: 1.1rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      margin-bottom: 6px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(201,162,39,.15);
+    }
+    .line {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 0;
+      border-bottom: 1px solid rgba(255,255,255,.05);
+      font-size: .84rem;
+    }
+    .line-name { flex: 1; line-height: 1.3; }
+    .qty-btn {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 1px solid rgba(201,162,39,.3);
+      background: transparent;
+      color: var(--zb-gold2);
+      font-weight: 700;
+      cursor: pointer;
+      font-size: .85rem;
+      transition: background .15s;
+    }
+    .qty-btn:hover { background: var(--zb-gold-dim); }
+    .line-price { min-width: 62px; text-align: right; color: var(--zb-gold2); font-family: var(--font-display); font-weight: 700; }
+    .totals-row { display: flex; justify-content: space-between; font-size: .9rem; padding: 3px 0; }
+
+    /* ── BÚSQUEDA ──────────────────────────────────────────── */
+    .search-box {
+      position: relative;
+      margin-bottom: 12px;
+    }
+    .search-box input {
+      padding-left: 36px;
+    }
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--zb-muted);
+      font-size: 1rem;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN -->
+  <div id="login">
+    <div class="login-box">
+      <h2 class="zb-logo" style="margin-bottom:6px;text-align:center;">POS</h2>
+      <p class="text-muted" style="margin-bottom:22px;font-size:.85rem;text-align:center;">Punto de Venta · Zona Break</p>
+      <label class="text-muted" style="font-size:.75rem;">Usuario</label>
+      <input class="zb-input" id="lu" style="margin:6px 0 14px;" placeholder="marlon / jesus / didier" />
+      <label class="text-muted" style="font-size:.75rem;">Contraseña</label>
+      <input class="zb-input" id="lp" type="password" style="margin:6px 0 20px;" placeholder="Tu contraseña" />
+      <button type="button" class="zb-btn zb-btn-primary" style="width:100%;font-size:1rem;" id="btnLogin">Entrar al POS</button>
+      <p style="margin-top:16px;font-size:.78rem;text-align:center;" class="text-muted">
+        <a href="/admin.html">Panel administrador →</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- APP POS -->
+  <div id="app" style="display:none;">
+    <header class="zb-header">
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <span class="zb-logo" style="font-size:1.2rem;">POS · Zona Break</span>
+        <a href="/" class="text-muted" style="font-size:.78rem;">Ver menú</a>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <span class="zb-badge" id="userName"></span>
+        <button type="button" class="zb-btn zb-btn-ghost" style="padding:7px 13px;font-size:.72rem;" id="btnOut">Salir</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <!-- IZQUIERDA: productos -->
+      <div>
+        <!-- Controles canal y domiciliario -->
+        <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+          <select class="zb-select" id="channel" style="max-width:180px;">
+            <option value="local">🏠 Local</option>
+            <option value="rappi">🛵 Rappi</option>
+            <option value="domicilio_interno">🏍️ Domicilio propio</option>
+          </select>
+          <select class="zb-select" id="deliveryPerson" style="max-width:200px;">
+            <option value="">— Repartidor —</option>
+          </select>
+        </div>
+
+        <!-- Búsqueda -->
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input class="zb-input" id="search" placeholder="Buscar producto..." />
+        </div>
+
+        <!-- Categorías -->
+        <div class="cats-pos" id="catsPos"></div>
+
+        <!-- Grid -->
+        <div class="grid-pos" id="grid"></div>
+      </div>
+
+      <!-- DERECHA: orden -->
+      <div class="order-panel">
+        <div class="order-title">Orden actual</div>
+
+        <!-- Líneas -->
+        <div id="lines" style="min-height:60px;"></div>
+
+        <!-- Datos cliente -->
+        <label class="text-muted" style="font-size:.72rem;">Nombre cliente</label>
+        <input class="zb-input" id="cust" style="padding:8px 12px;" placeholder="Nombre (opcional)" />
+
+        <!-- Pago -->
+        <label class="text-muted" style="font-size:.72rem;">Forma de pago</label>
+        <select class="zb-select" id="pay" style="padding:8px 12px;">
+          <option>Efectivo</option>
+          <option>Nequi</option>
+          <option>Datáfono</option>
+          <option>Transferencia</option>
+        </select>
+
+        <!-- Servicio -->
+        <label style="display:flex;align-items:center;gap:8px;font-size:.85rem;cursor:pointer;">
+          <input type="checkbox" id="svc" /> Servicio 8%
+        </label>
+
+        <!-- Totales -->
+        <div style="border-top:1px solid rgba(201,162,39,.15);padding-top:10px;margin-top:4px;">
+          <div class="totals-row"><span class="text-muted">Subtotal</span><span id="sub" class="text-gold">$0</span></div>
+          <div class="totals-row"><span class="text-muted">Servicio</span><span id="svv" class="text-gold">$0</span></div>
+          <div class="totals-row" style="font-family:var(--font-display);font-size:1.3rem;font-weight:900;margin-top:4px;">
+            <span>TOTAL</span><span id="tot" class="text-gold">$0</span>
+          </div>
+        </div>
+
+        <!-- Acciones -->
+        <button type="button" class="zb-btn zb-btn-primary" style="width:100%;" id="btnPay" disabled>
+          💰 Cobrar
+        </button>
+        <button type="button" class="zb-btn zb-btn-ghost" style="width:100%;font-size:.8rem;" id="btnPrint">
+          🖨️ Imprimir ticket
+        </button>
+
+        <!-- WhatsApp -->
+        <p class="text-muted" style="font-size:.7rem;text-align:center;">Enviar pedido por WhatsApp:</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+          <a class="zb-btn zb-btn-ghost" id="waCocina" target="_blank" style="padding:7px;font-size:.62rem;text-align:center;text-decoration:none;">🍳 Cocina</a>
+          <a class="zb-btn zb-btn-ghost" id="waCaja"   target="_blank" style="padding:7px;font-size:.62rem;text-align:center;text-decoration:none;">💰 Caja</a>
+          <a class="zb-btn zb-btn-ghost" id="waAdmin"  target="_blank" style="padding:7px;font-size:.62rem;text-align:center;text-decoration:none;">👤 Admin</a>
+        </div>
+
+        <!-- Limpiar -->
+        <button type="button" class="zb-btn zb-btn-ghost" style="width:100%;font-size:.75rem;color:var(--zb-danger);border-color:rgba(201,62,62,.3);" id="btnClear">
+          🗑️ Limpiar orden
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+  <script src="/assets/js/api.js"></script>
+  <script src="/components/toast.js"></script>
+  <script>
+    const CAT_LABELS = {
+      hamburguesas:'🍔 Hamburguesas', perros:'🌭 Perros Calientes',
+      sandwiches:'🥪 Sándwiches', picadas:'🍖 Picadas', asados:'🥩 Asados',
+      extras:'🍟 Extras', bebidas:'🥤 Bebidas', cocteles:'🍸 Cocteles', sinAlcohol:'🥥 Sin Alcohol',
+    };
+
+    let products = [];
+    let cart = [];
+    let deliveryPersons = [];
+    let lastTicket = null;
+    let waConfig = {};
+    let activeCat = 'todos';
+    let searchQ = '';
+
+    const fmt = n => '$' + Math.round(n).toLocaleString('es-CO');
+
+    // ── RENDER PRODUCTOS ──────────────────────────────────
+    function filtered() {
+      let list = activeCat === 'todos' ? products : products.filter(p=>p.category===activeCat);
+      if (searchQ) list = list.filter(p=>p.name.toLowerCase().includes(searchQ.toLowerCase()));
+      return list;
+    }
+
+    function renderGrid() {
+      const list = filtered();
+      const grid = document.getElementById('grid');
+      if (!list.length) {
+        grid.innerHTML = '<p class="text-muted" style="padding:20px;grid-column:1/-1;">Sin productos</p>';
+        return;
+      }
+      grid.innerHTML = list.map(p=>`
+        <div class="pos-card" data-id="${p._id}">
+          <div class="pos-emoji">${p.emoji||'🍽️'}</div>
+          <div class="pos-name">${p.name}</div>
+          <div class="pos-price">${fmt(p.price)}</div>
+        </div>`).join('');
+    }
+
+    function renderCats() {
+      const cats = [...new Set(products.map(p=>p.category))];
+      const catsEl = document.getElementById('catsPos');
+      catsEl.innerHTML =
+        `<button class="cat-pos on" data-cat="todos">🍽️ Todo</button>`+
+        cats.map(c=>`<button class="cat-pos" data-cat="${c}">${CAT_LABELS[c]||c}</button>`).join('');
+      catsEl.onclick = (e) => {
+        const btn = e.target.closest('.cat-pos');
+        if (!btn) return;
+        activeCat = btn.dataset.cat;
+        document.querySelectorAll('.cat-pos').forEach(b=>b.classList.toggle('on',b===btn));
+        renderGrid();
+      };
+    }
+
+    // ── RENDER LÍNEAS ORDEN ───────────────────────────────
+    function renderOrder() {
+      const sub = cart.reduce((s,i)=>s+i.price*i.qty,0);
+      const svc = document.getElementById('svc').checked ? Math.round(sub*.08) : 0;
+      const total = sub + svc;
+
+      document.getElementById('lines').innerHTML = cart.length
+        ? cart.map(i=>`
+          <div class="line">
+            <span class="line-name">${i.emoji||''} ${i.name}</span>
+            <button type="button" class="qty-btn" data-m="${i.productId}">−</button>
+            <span style="min-width:18px;text-align:center;">${i.qty}</span>
+            <button type="button" class="qty-btn" data-p="${i.productId}">+</button>
+            <span class="line-price">${fmt(i.price*i.qty)}</span>
+          </div>`).join('')
+        : '<p class="text-muted" style="font-size:.82rem;padding:8px 0;">Sin productos aún</p>';
+
+      document.getElementById('lines').onclick = (e) => {
+        const m = e.target.dataset.m;
+        const p = e.target.dataset.p;
+        const id = m || p;
+        if (!id) return;
+        const item = cart.find(c=>c.productId===id);
+        if (!item) return;
+        if (m) item.qty--;
+        if (p) item.qty++;
+        cart = cart.filter(c=>c.qty>0);
+        renderOrder();
+      };
+
+      document.getElementById('sub').textContent = fmt(sub);
+      document.getElementById('svv').textContent = fmt(svc);
+      document.getElementById('tot').textContent = fmt(total);
+      document.getElementById('btnPay').disabled = !cart.length;
+    }
+
+    function waHref(num, text) {
+      const n = String(num||'').replace(/\D/g,'');
+      return n ? 'https://wa.me/'+n+'?text='+encodeURIComponent(text) : '#';
+    }
+
+    function updateWaLinks(msg) {
+      const w = waConfig;
+      document.getElementById('waCocina').href = waHref(w.cocina, msg);
+      document.getElementById('waCaja').href   = waHref(w.caja,   msg);
+      document.getElementById('waAdmin').href  = waHref(w.admin,  msg);
+    }
+
+    function buildTicketMsg(code) {
+      const sub = cart.reduce((s,i)=>s+i.price*i.qty,0);
+      const svc = document.getElementById('svc').checked ? Math.round(sub*.08) : 0;
+      const total = sub+svc;
+      const lines = cart.map(i=>'• '+i.qty+'× '+i.name+'  '+fmt(i.price*i.qty)).join('\n');
+      const pago = document.getElementById('pay').value;
+      const cliente = document.getElementById('cust').value||'Cliente';
+      const canal = document.getElementById('channel').selectedOptions[0].textContent;
+      return '🍔 *ZONA BREAK — VENTA POS*\n'+
+             (code?'📋 *'+code+'*\n':'')+
+             '👤 '+cliente+'\n'+
+             '📦 Canal: '+canal+'\n'+
+             '──────────────────\n'+
+             lines+'\n──────────────────\n'+
+             'Subtotal: '+fmt(sub)+
+             (svc?'\nServicio 8%: '+fmt(svc):'')+
+             '\n*TOTAL: '+fmt(total)+'*\n'+
+             '💳 '+pago;
+    }
+
+    function openPrintWindow(data) {
+      const { code, lines, sub, svc, total, payment, customer, channel } = data;
+      const w = window.open('','_blank');
+      if (!w) { showToast('Permite las ventanas emergentes', 'err'); return; }
+      w.document.write(`<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Ticket</title>
+<style>
+  body{font-family:monospace;padding:14px;max-width:80mm;margin:0 auto;font-size:12px;}
+  h1{font-size:1.3rem;font-weight:900;margin:0 0 2px;}
+  .sub{font-size:.8rem;color:#555;margin:0 0 10px;}
+  hr{border:none;border-top:1px dashed #ccc;margin:8px 0;}
+  .row{display:flex;justify-content:space-between;margin:3px 0;}
+  .total{font-size:1.1rem;font-weight:900;}
+  .footer{margin-top:12px;font-size:.75rem;color:#777;text-align:center;}
+</style></head><body>
+<h1>ZONA BREAK</h1>
+<p class="sub">Cocina Urbana</p>
+<hr/>
+${code?'<div class="row"><span>Pedido:</span><strong>'+code+'</strong></div>':'<div>Borrador</div>'}
+<div class="row"><span>Fecha:</span><span>${new Date().toLocaleString('es-CO')}</span></div>
+${customer?'<div class="row"><span>Cliente:</span><span>'+customer+'</span></div>':''}
+${channel?'<div class="row"><span>Canal:</span><span>'+channel+'</span></div>':''}
+<hr/>
+${(lines||[]).map(i=>`<div class="row"><span>${i.qty}× ${i.name}</span><span>${fmt(i.price*i.qty)}</span></div>`).join('')}
+<hr/>
+<div class="row"><span>Subtotal</span><span>${fmt(sub)}</span></div>
+${svc?'<div class="row"><span>Servicio 8%</span><span>'+fmt(svc)+'</span></div>':''}
+<div class="row total"><strong>TOTAL</strong><strong>${fmt(total)}</strong></div>
+${payment?'<div class="row" style="margin-top:6px;"><span>Pago:</span><span>'+payment+'</span></div>':''}
+<div class="footer">¡Gracias por tu pedido!<br/>Zona Break — La calle tiene sabor</div>
+<script>window.onload=function(){window.print();setTimeout(()=>window.close(),400);}<\/script>
+</body></html>`);
+      w.document.close();
+    }
+
+    // ── INIT ──────────────────────────────────────────────
+    async function init() {
+      const [prods, dp, cfg] = await Promise.all([
+        ZB.get('/api/products'),
+        ZB.get('/api/delivery/persons'),
+        fetch('/api/public/config').then(r=>r.json()).catch(()=>({whatsapp:{}})),
+      ]);
+      products = prods;
+      deliveryPersons = dp;
+      waConfig = cfg.whatsapp || {};
+
+      // Repartidores
+      const sel = document.getElementById('deliveryPerson');
+      sel.innerHTML = '<option value="">— Repartidor —</option>'+
+        dp.map(p=>`<option value="${p._id}">${p.name}</option>`).join('');
+
+      renderCats();
+      renderGrid();
+      renderOrder();
+      updateWaLinks('(Sin pedido aún)');
+
+      // Click en producto
+      document.getElementById('grid').onclick = (e) => {
+        const card = e.target.closest('[data-id]');
+        if (!card) return;
+        const p = products.find(x=>x._id===card.dataset.id);
+        if (!p) return;
+        const ex = cart.find(c=>c.productId===p._id);
+        if (ex) ex.qty++;
+        else cart.push({productId:p._id, name:p.name, price:p.price, qty:1, emoji:p.emoji||''});
+        renderOrder();
+      };
+
+      // Búsqueda
+      document.getElementById('search').oninput = (e) => {
+        searchQ = e.target.value;
+        renderGrid();
+      };
+
+      // Cambio servicio
+      document.getElementById('svc').onchange = renderOrder;
+    }
+
+    // ── COBRAR ────────────────────────────────────────────
+    document.getElementById('btnPay').onclick = async () => {
+      if (!cart.length) return;
+      const btn = document.getElementById('btnPay');
+      btn.disabled = true; btn.textContent = 'Procesando…';
+      try {
+        const sub = cart.reduce((s,i)=>s+i.price*i.qty,0);
+        const svc = document.getElementById('svc').checked ? Math.round(sub*.08) : 0;
+        const dpId = document.getElementById('deliveryPerson').value;
+        const dpObj = deliveryPersons.find(x=>String(x._id)===dpId);
+        const linesSnap = cart.map(c=>({...c}));
+        const order = await ZB.post('/api/orders', {
+          source:'pos',
+          channel: document.getElementById('channel').value,
+          deliveryPersonId: dpId||null,
+          deliveryStaffName: dpObj ? dpObj.name : '',
+          customerName: document.getElementById('cust').value||'Cliente',
+          paymentMethod: document.getElementById('pay').value,
+          items: cart.map(c=>({productId:c.productId, name:c.name, price:c.price, qty:c.qty, emoji:c.emoji})),
+          servicePct: document.getElementById('svc').checked ? 8 : 0,
+          createdBy: document.getElementById('userName').textContent,
+        });
+        lastTicket = {
+          code: order.code,
+          lines: linesSnap,
+          sub,
+          svc,
+          total: sub+svc,
+          payment: document.getElementById('pay').value,
+          customer: document.getElementById('cust').value||'Cliente',
+          channel: document.getElementById('channel').selectedOptions[0].textContent,
+        };
+        const msg = buildTicketMsg(order.code);
+        updateWaLinks(msg);
+        cart = [];
+        renderOrder();
+        showToast('✅ Venta registrada · '+order.code);
+      } catch(e) {
+        showToast('Error: '+e.message, 'err');
+      } finally {
+        btn.disabled = false; btn.textContent = '💰 Cobrar';
+      }
+    };
+
+    // ── IMPRIMIR ──────────────────────────────────────────
+    document.getElementById('btnPrint').onclick = () => {
+      if (cart.length) {
+        const sub = cart.reduce((s,i)=>s+i.price*i.qty,0);
+        const svc = document.getElementById('svc').checked ? Math.round(sub*.08) : 0;
+        openPrintWindow({
+          code: null,
+          lines: cart.map(c=>({...c})),
+          sub, svc, total: sub+svc,
+          payment: document.getElementById('pay').value,
+          customer: document.getElementById('cust').value||'',
+          channel: document.getElementById('channel').selectedOptions[0].textContent,
+        });
+      } else if (lastTicket) {
+        openPrintWindow(lastTicket);
+      } else {
+        showToast('No hay ticket para imprimir', 'err');
+      }
+    };
+
+    // ── LIMPIAR ───────────────────────────────────────────
+    document.getElementById('btnClear').onclick = () => {
+      if (!cart.length) return;
+      if (!confirm('¿Limpiar la orden actual?')) return;
+      cart = [];
+      renderOrder();
+    };
+
+    // ── LOGIN ─────────────────────────────────────────────
+    document.getElementById('btnLogin').onclick = async () => {
+      const lu = document.getElementById('lu').value;
+      const lp = document.getElementById('lp').value;
+      if (!lu||!lp) { showToast('Completa los campos', 'err'); return; }
+      try {
+        const r = await fetch('/api/auth/login', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({username:lu, password:lp}),
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error);
+        if (d.user.role !== 'pos') throw new Error('Acceso solo para usuarios POS');
+        ZB.setToken(d.token);
+        document.getElementById('login').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        document.getElementById('userName').textContent = d.user.name;
+        await init();
+        const socket = io({transports:['websocket','polling']});
+        socket.on('order:new', () => showToast('🔔 Nuevo pedido web'));
+      } catch(e) {
+        showToast(e.message||'Error de acceso', 'err');
+      }
+    };
+
+    // Enter en login
+    ['lu','lp'].forEach(id => {
+      document.getElementById(id).addEventListener('keydown', e => {
+        if (e.key==='Enter') document.getElementById('btnLogin').click();
+      });
+    });
+
+    document.getElementById('btnOut').onclick = () => { ZB.setToken(null); location.reload(); };
+
+    // ── AUTO-LOGIN si hay token ───────────────────────────
+    if (ZB.getToken()) {
+      fetch('/api/auth/me', {headers:{Authorization:'Bearer '+ZB.getToken()}})
+        .then(r=>r.json())
+        .then(d => {
+          if (!d.user || d.user.role!=='pos') { ZB.setToken(null); return; }
+          document.getElementById('login').style.display = 'none';
+          document.getElementById('app').style.display = 'block';
+          document.getElementById('userName').textContent = d.user.name||'POS';
+          init();
+          const socket = io({transports:['websocket','polling']});
+          socket.on('order:new', () => showToast('🔔 Nuevo pedido web'));
+        })
+        .catch(()=>ZB.setToken(null));
+    }
+  </script>
+</body>
+</html>

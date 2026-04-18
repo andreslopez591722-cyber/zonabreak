@@ -1,0 +1,197 @@
+:root {
+  --zb-black: #0a0a0c;
+  --zb-black2: #12121a;
+  --zb-black3: #1a1a24;
+  --zb-gold: #c9a227;
+  --zb-gold2: #e8c547;
+  --zb-gold-dim: rgba(201, 162, 39, 0.15);
+  --zb-text: #f5f0e8;
+  --zb-muted: #8a8478;
+  --zb-danger: #c94c4c;
+  --zb-success: #3d9e6a;
+  --font-display: "Barlow Condensed", system-ui, sans-serif;
+  --font-body: "DM Sans", system-ui, sans-serif;
+  --radius: 10px;
+  --shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--zb-black);
+  color: var(--zb-text);
+  min-height: 100vh;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--zb-gold2);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+.zb-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: linear-gradient(180deg, rgba(10, 10, 12, 0.98), rgba(10, 10, 12, 0.92));
+  border-bottom: 1px solid var(--zb-gold-dim);
+  backdrop-filter: blur(12px);
+}
+
+.zb-logo {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: 1.5rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, var(--zb-text), var(--zb-gold2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.zb-btn {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  padding: 12px 22px;
+  border-radius: var(--radius);
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.zb-btn-primary {
+  background: linear-gradient(135deg, var(--zb-gold), var(--zb-gold2));
+  color: var(--zb-black);
+  box-shadow: 0 4px 20px rgba(201, 162, 39, 0.35);
+}
+.zb-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(201, 162, 39, 0.45);
+}
+
+.zb-btn-ghost {
+  background: transparent;
+  color: var(--zb-gold2);
+  border: 1px solid rgba(201, 162, 39, 0.4);
+}
+.zb-btn-ghost:hover {
+  background: var(--zb-gold-dim);
+}
+
+.zb-card {
+  background: var(--zb-black2);
+  border: 1px solid rgba(201, 162, 39, 0.12);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  transition: border-color 0.25s, transform 0.25s;
+}
+.zb-card:hover {
+  border-color: rgba(201, 162, 39, 0.35);
+}
+
+.zb-input,
+.zb-select {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--zb-black3);
+  color: var(--zb-text);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+}
+.zb-input:focus,
+.zb-select:focus {
+  outline: none;
+  border-color: var(--zb-gold);
+}
+
+.zb-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: var(--zb-gold-dim);
+  color: var(--zb-gold2);
+  border: 1px solid rgba(201, 162, 39, 0.3);
+}
+
+.zb-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 20px;
+  padding: 14px 20px;
+  background: var(--zb-black3);
+  border: 1px solid var(--zb-gold);
+  border-radius: var(--radius);
+  z-index: 9999;
+  transform: translateY(120%);
+  opacity: 0;
+  transition: transform 0.35s ease, opacity 0.35s ease;
+  max-width: 320px;
+  font-size: 0.9rem;
+}
+.zb-toast.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.grid-products {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 520px) {
+  .grid-products {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@keyframes zbFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.zb-animate {
+  animation: zbFadeIn 0.4s ease forwards;
+}
+
+.text-gold {
+  color: var(--zb-gold2);
+}
+.text-muted {
+  color: var(--zb-muted);
+}

@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zona Break — POS & Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+:root{
+  --negro:#0D0B09;--negro2:#161310;--negro3:#1F1B17;--negro4:#2A2420;
+  --fuego:#FF4D00;--fuego2:#FF7A33;--oro:#D4A843;--crema:#F5EDD8;
+  --gris:#7A6E65;--gris2:#3D3530;--verde:#3DBA6E;--rojo:#E74C3C;--azul:#3498DB;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--negro);color:var(--crema);font-family:'DM Sans',sans-serif;min-height:100vh;}
+
+/* ── LOGIN ──────────────────────────────────────── */
+#loginScreen{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at center,#1a0f00 0%,var(--negro) 70%);
+  flex-direction:column;padding:20px;
+}
+.login-logo{font-size:64px;margin-bottom:12px;}
+.login-titulo{font-family:'Barlow Condensed',sans-serif;font-size:48px;font-weight:900;letter-spacing:3px;color:var(--fuego);text-transform:uppercase;}
+.login-sub{font-size:11px;letter-spacing:5px;color:var(--gris);margin-bottom:32px;text-transform:uppercase;}
+.login-box{background:var(--negro3);border:1px solid rgba(255,77,0,.2);border-radius:4px;padding:28px;width:100%;max-width:320px;}
+.login-lbl{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;color:var(--fuego);margin-bottom:5px;display:block;text-transform:uppercase;}
+.login-inp{width:100%;background:var(--negro4);border:1px solid rgba(255,255,255,.08);color:var(--crema);font-family:'DM Sans',sans-serif;font-size:15px;padding:11px 13px;border-radius:2px;outline:none;margin-bottom:13px;}
+.login-inp:focus{border-color:var(--fuego);}
+.login-btn{width:100%;background:var(--fuego);color:var(--negro);border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;letter-spacing:3px;text-transform:uppercase;padding:13px;clip-path:polygon(10px 0%,100% 0%,calc(100% - 10px) 100%,0% 100%);transition:all .25s;}
+.login-btn:hover{background:var(--fuego2);}
+.login-err{color:var(--rojo);font-size:12px;margin-top:8px;text-align:center;display:none;}
+.login-modes{display:flex;gap:8px;margin-bottom:16px;}
+.mode-btn{flex:1;padding:8px;background:var(--negro4);border:1px solid rgba(255,255,255,.08);color:var(--gris);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:all .2s;}
+.mode-btn.sel{border-color:var(--fuego);color:var(--fuego);}
+
+/* ── APP ──────────────────────────────────────── */
+#appScreen{display:none;flex-direction:column;min-height:100vh;}
+.topbar{background:var(--negro2);border-bottom:1px solid rgba(255,77,0,.15);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;gap:8px;flex-wrap:wrap;}
+.topbar-logo{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;color:var(--fuego);letter-spacing:3px;text-transform:uppercase;}
+.topbar-modo{font-size:11px;letter-spacing:2px;color:var(--gris);text-transform:uppercase;background:rgba(255,77,0,.1);border:1px solid rgba(255,77,0,.2);padding:3px 10px;border-radius:2px;}
+.topbar-r{display:flex;align-items:center;gap:8px;}
+.tb-btn{background:none;border:1px solid rgba(255,255,255,.1);color:var(--gris);padding:5px 12px;font-size:11px;cursor:pointer;border-radius:2px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:1px;text-transform:uppercase;transition:all .2s;}
+.tb-btn:hover{color:var(--fuego);border-color:var(--fuego);}
+
+.tabs{background:var(--negro2);border-bottom:1px solid rgba(255,255,255,.04);display:flex;overflow-x:auto;padding:0 8px;scrollbar-width:none;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{flex-shrink:0;padding:12px 16px;background:none;border:none;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gris);cursor:pointer;border-bottom:3px solid transparent;transition:all .25s;white-space:nowrap;}
+.tab.active,.tab:hover{color:var(--fuego);border-bottom-color:var(--fuego);}
+.tab-badge{background:var(--rojo);color:#fff;border-radius:50%;width:16px;height:16px;font-size:10px;display:inline-flex;align-items:center;justify-content:center;margin-left:4px;}
+
+.pg{display:none;padding:18px 16px;max-width:1200px;margin:0 auto;width:100%;}
+.pg.active{display:block;}
+
+/* ── STATS ──────────────────────────────────────── */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:20px;}
+.stat-card{background:var(--negro2);border:1px solid rgba(255,255,255,.04);border-radius:3px;padding:14px;position:relative;overflow:hidden;}
+.stat-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--fuego);}
+.stat-label{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--gris);margin-bottom:6px;}
+.stat-val{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;}
+.stat-val.fuego{color:var(--fuego);} .stat-val.oro{color:var(--oro);} .stat-val.verde{color:var(--verde);} .stat-val.rojo{color:var(--rojo);}
+
+/* ── COMPONENTES ────────────────────────────────── */
+.stitle{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;letter-spacing:3px;text-transform:uppercase;color:var(--fuego);border-left:4px solid var(--fuego);padding-left:12px;margin-bottom:14px;}
+.btn{padding:7px 16px;border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;border-radius:2px;transition:all .2s;}
+.btn-f{background:var(--fuego);color:var(--negro);}.btn-f:hover{background:var(--fuego2);}
+.btn-o{background:none;border:1px solid rgba(255,77,0,.3);color:var(--fuego);}.btn-o:hover{background:rgba(255,77,0,.1);}
+.btn-r{background:var(--rojo);color:#fff;}.btn-r:hover{opacity:.85;}
+.btn-v{background:var(--verde);color:var(--negro);}.btn-v:hover{opacity:.9;}
+.btn-a{background:var(--azul);color:#fff;}.btn-a:hover{opacity:.85;}
+.btn-sm{padding:4px 10px;font-size:11px;}
+.inp{background:var(--negro4);border:1px solid rgba(255,255,255,.08);color:var(--crema);font-family:'DM Sans',sans-serif;font-size:14px;padding:9px 11px;border-radius:2px;outline:none;transition:border .2s;}
+.inp:focus{border-color:var(--fuego);}
+.inp::placeholder{color:var(--gris);}
+.sel{background:var(--negro4);border:1px solid rgba(255,255,255,.08);color:var(--crema);font-family:'DM Sans',sans-serif;font-size:13px;padding:8px 11px;border-radius:2px;outline:none;cursor:pointer;}
+.sel option{background:var(--negro3);}
+.fg{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;align-items:flex-end;}
+.fg label{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--gris);}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{background:var(--negro3);font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--oro);padding:9px 11px;text-align:left;border-bottom:1px solid rgba(255,255,255,.06);}
+td{padding:9px 11px;border-bottom:1px solid rgba(255,255,255,.03);vertical-align:middle;}
+tr:hover td{background:rgba(255,77,0,.02);}
+.badge{display:inline-block;padding:2px 8px;border-radius:2px;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+.b-verde{background:rgba(61,186,110,.15);color:var(--verde);border:1px solid rgba(61,186,110,.3);}
+.b-rojo{background:rgba(231,76,60,.15);color:var(--rojo);border:1px solid rgba(231,76,60,.3);}
+.b-oro{background:rgba(212,168,67,.15);color:var(--oro);border:1px solid rgba(212,168,67,.3);}
+.b-azul{background:rgba(52,152,219,.15);color:var(--azul);border:1px solid rgba(52,152,219,.3);}
+.b-fuego{background:rgba(255,77,0,.15);color:var(--fuego);border:1px solid rgba(255,77,0,.3);}
+.div-line{height:1px;background:rgba(255,255,255,.05);margin:20px 0;}
+
+/* ── POS GRID ───────────────────────────────────── */
+.pos-layout{display:grid;grid-template-columns:1fr 340px;gap:16px;}
+@media(max-width:900px){.pos-layout{grid-template-columns:1fr;}}
+.pos-productos{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;}
+.pos-card{background:var(--negro2);border:1px solid rgba(255,255,255,.05);border-radius:3px;overflow:hidden;cursor:pointer;transition:all .25s;}
+.pos-card:hover{border-color:var(--fuego);transform:translateY(-2px);}
+.pos-card-img{height:100px;overflow:hidden;background:var(--negro3);display:flex;align-items:center;justify-content:center;font-size:40px;}
+.pos-card-img img{width:100%;height:100%;object-fit:cover;}
+.pos-card-body{padding:10px;}
+.pos-card-nombre{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;text-transform:uppercase;margin-bottom:4px;line-height:1.1;}
+.pos-card-precio{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;color:var(--oro);}
+.pos-card-costo{font-size:10px;color:var(--gris);margin-top:2px;}
+/* POS ORDEN */
+.pos-orden{background:var(--negro2);border:1px solid rgba(255,255,255,.06);border-radius:4px;position:sticky;top:60px;max-height:calc(100vh - 80px);display:flex;flex-direction:column;}
+.pos-orden-hdr{background:var(--negro3);border-bottom:1px solid rgba(255,77,0,.2);padding:14px 16px;}
+.pos-orden-titulo{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--fuego);}
+.pos-orden-body{flex:1;overflow-y:auto;padding:12px;}
+.pos-orden-body::-webkit-scrollbar{width:3px;}
+.pos-orden-body::-webkit-scrollbar-thumb{background:var(--fuego);}
+.oi{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.oi-name{flex:1;font-size:13px;font-weight:500;}
+.oi-ctrl{display:flex;align-items:center;gap:5px;}
+.oi-btn{background:var(--negro4);border:1px solid rgba(255,255,255,.08);color:var(--crema);width:24px;height:24px;border-radius:2px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.oi-btn:hover{border-color:var(--fuego);color:var(--fuego);}
+.oi-qty{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;min-width:16px;text-align:center;}
+.oi-total{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--oro);min-width:60px;text-align:right;}
+.pos-orden-footer{padding:14px;border-top:1px solid rgba(255,255,255,.05);}
+.pos-total-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.pos-total-lbl{font-family:'Barlow Condensed',sans-serif;font-size:14px;letter-spacing:2px;text-transform:uppercase;color:var(--gris);}
+.pos-total-val{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:900;color:var(--oro);}
+.pos-cobrar{width:100%;background:var(--fuego);color:var(--negro);border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;letter-spacing:3px;text-transform:uppercase;padding:14px;clip-path:polygon(10px 0%,100% 0%,calc(100% - 10px) 100%,0% 100%);transition:all .3s;margin-top:8px;}
+.pos-cobrar:hover{background:var(--fuego2);}
+.pos-cobrar:disabled{opacity:.4;cursor:not-allowed;}
+.pos-empty{text-align:center;padding:30px;color:var(--gris);font-family:'Barlow Condensed',sans-serif;font-size:14px;letter-spacing:2px;text-transform:uppercase;}
+
+/* ── MODAL ──────────────────────────────────────── */
+.mbg{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:500;display:none;align-items:center;justify-content:center;padding:16px;}
+.mbg.open{display:flex;}
+.mbox{background:var(--negro3);border:1px solid rgba(255,77,0,.2);border-radius:4px;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;}
+.mbox::-webkit-scrollbar{width:3px;}.mbox::-webkit-scrollbar-thumb{background:var(--fuego);}
+.mhdr{padding:16px 18px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;align-items:center;}
+.mhdr-t{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--fuego);}
+.mx{background:none;border:none;color:var(--gris);font-size:20px;cursor:pointer;}
+.mbdy{padding:18px;}
+.mfl{display:flex;flex-direction:column;gap:12px;}
+.mfl label{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--gris);text-transform:uppercase;letter-spacing:1px;}
+.mfl .inp,.mfl .sel{width:100%;}
+
+/* ── CONTABILIDAD ───────────────────────────────── */
+.conta-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:24px;}
+@media(max-width:700px){.conta-grid{grid-template-columns:1fr;}}
+.conta-card{background:var(--negro2);border:1px solid rgba(255,255,255,.05);border-radius:4px;padding:18px;text-align:center;}
+.conta-periodo{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--fuego);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid rgba(255,77,0,.2);}
+.conta-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;}
+.conta-label{color:var(--gris);}
+.conta-value{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;}
+.conta-value.rojo{color:var(--rojo);}
+.conta-value.verde{color:var(--verde);}
+.conta-value.oro{color:var(--oro);}
+.conta-total{margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;}
+/* SOCIOS */
+.socios-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
+@media(max-width:600px){.socios-grid{grid-template-columns:1fr;}}
+.socio-card{background:var(--negro2);border:1px solid rgba(255,255,255,.06);border-radius:4px;padding:18px;text-align:center;}
+.socio-nombre{font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--crema);margin-bottom:4px;}
+.socio-pct{font-size:12px;color:var(--gris);margin-bottom:12px;}
+.socio-valor{font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:900;color:var(--oro);}
+
+/* ── INVENTARIO ─────────────────────────────────── */
+.inv-bar-wrap{background:var(--negro4);border-radius:2px;height:6px;width:100%;overflow:hidden;margin-top:4px;}
+.inv-bar{height:100%;border-radius:2px;transition:width .3s;}
+
+/* ── TOAST ──────────────────────────────────────── */
+.toast{position:fixed;top:72px;right:16px;z-index:600;background:var(--negro3);border:1px solid var(--fuego);border-radius:3px;padding:12px 18px;max-width:300px;transform:translateX(130%);transition:transform .3s;box-shadow:0 4px 24px rgba(255,77,0,.3);}
+.toast.show{transform:translateX(0);}
+.toast-t{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--fuego);}
+.toast-b{font-size:13px;color:var(--gris);margin-top:3px;}
+
+/* ── INFO BOXES ─────────────────────────────────── */
+.info-box{background:rgba(255,77,0,.07);border:1px solid rgba(255,77,0,.2);border-radius:3px;padding:10px 14px;font-size:13px;color:var(--fuego);margin-bottom:16px;}
+.sbox{background:var(--negro2);border:1px solid rgba(255,255,255,.05);border-radius:4px;padding:16px;margin-bottom:16px;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-logo">🍔</div>
+  <div class="login-titulo">Zona Break</div>
+  <div class="login-sub">Sistema de gestión</div>
+  <div class="login-box">
+    <div class="login-modes">
+      <button class="mode-btn sel" id="modePOS" onclick="seleccionarModo('pos')">⚡ POS</button>
+      <button class="mode-btn" id="modeAdmin" onclick="seleccionarModo('admin')">🔒 Admin</button>
+    </div>
+    <label class="login-lbl">Usuario</label>
+    <input class="login-inp" id="loginUser" placeholder="marlon / jesus / didier / admin">
+    <label class="login-lbl">Contraseña</label>
+    <input class="login-inp" type="password" id="loginPass" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">Ingresar →</button>
+    <div class="login-err" id="loginErr">Usuario o contraseña incorrectos</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appScreen">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="topbar-logo">⚡ Zona Break</div>
+      <div class="topbar-modo" id="topbarModo">POS</div>
+    </div>
+    <div class="topbar-r">
+      <span id="topbarUser" style="font-size:12px;color:var(--gris)"></span>
+      <button class="tb-btn" onclick="doLogout()">Salir</button>
+    </div>
+  </div>
+
+  <!-- TABS POS -->
+  <div class="tabs" id="tabsPOS">
+    <button class="tab active" onclick="showPg('vender',this)">🛒 Vender</button>
+    <button class="tab" onclick="showPg('ventas',this)">📋 Ventas de Hoy</button>
+    <button class="tab" onclick="showPg('inventario',this)">📦 Inventario</button>
+  </div>
+
+  <!-- TABS ADMIN -->
+  <div class="tabs" id="tabsAdmin" style="display:none">
+    <button class="tab active" onclick="showPg('contabilidad',this)">📊 Contabilidad</button>
+    <button class="tab" onclick="showPg('costos',this)">💰 Costos</button>
+    <button class="tab" onclick="showPg('recetas',this)">📝 Recetas</button>
+    <button class="tab" onclick="showPg('gastos',this)">💸 Gastos</button>
+    <button class="tab" onclick="showPg('invAdmin',this)">📦 Inventario</button>
+    <button class="tab" onclick="showPg('reportes',this)">📈 Reportes</button>
+    <button class="tab" onclick="showPg('emailconfig',this)">📧 Correo</button>
+    <button class="tab" onclick="showPg('socios',this)">👥 Socios</button>
+  </div>
+
+  <!-- ══ PG: VENDER ══ -->
+  <div class="pg active" id="pg-vender">
+    <div class="pos-layout">
+      <div>
+        <!-- Filtro categoría -->
+        <div class="fg" style="margin-bottom:16px">
+          <label>Filtrar
+            <select class="sel" id="posCatFilter" onchange="renderPosProductos()">
+              <option value="all">Todos</option>
+              <option value="hamburguesas">🍔 Hamburguesas</option>
+              <option value="perros">🌭 Perros</option>
+              <option value="picadas">🍖 Picadas</option>
+              <option value="extras">🍟 Extras</option>
+            </select>
+          </label>
+          <label>Buscar<input class="inp" id="posBuscar" placeholder="Nombre producto..." oninput="renderPosProductos()" style="width:200px"></label>
+        </div>
+        <div class="pos-productos" id="posProductos"></div>
+      </div>
+      <!-- ORDEN -->
+      <div class="pos-orden">
+        <div class="pos-orden-hdr">
+          <div class="pos-orden-titulo">🧾 Orden Actual</div>
+        </div>
+        <div class="pos-orden-body">
+          <div class="pos-empty" id="posOrdenEmpty">Agrega productos →</div>
+          <div id="posOrdenItems"></div>
+        </div>
+        <div class="pos-orden-footer">
+          <div class="fg" style="margin-bottom:10px">
+            <label>Cliente<input class="inp" id="posCliente" placeholder="Nombre" style="width:140px"></label>
+            <label>Pago<select class="sel" id="posPago" style="width:120px">
+              <option>Efectivo</option><option>Nequi</option><option>Daviplata</option>
+              <option>Bancolombia</option><option>Datáfono</option><option>Cortesía</option>
+            </select></label>
+          </div>
+          <div class="pos-total-row">
+            <span class="pos-total-lbl">Total</span>
+            <span class="pos-total-val" id="posTotal">$0</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gris);margin-bottom:10px">
+            <span>Costo productos: <span id="posCosto" style="color:var(--rojo)">$0</span></span>
+            <span>Ganancia: <span id="posGanancia" style="color:var(--verde)">$0</span></span>
+          </div>
+          <button class="pos-cobrar" id="btnCobrar" onclick="cobrarVenta()" disabled>✅ Cobrar Venta</button>
+          <button class="btn btn-o btn-sm" style="width:100%;margin-top:8px" onclick="imprimirTicket()">🖨️ Imprimir Ticket</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PG: VENTAS HOY ══ -->
+  <div class="pg" id="pg-ventas">
+    <div class="stats-grid" id="statsHoy"></div>
+    <div class="stitle">Ventas de Hoy</div>
+    <div style="overflow-x:auto">
+      <table><thead><tr><th>ID</th><th>Hora</th><th>Cliente</th><th>Productos</th><th>Total</th><th>Pago</th><th>Fuente</th></tr></thead>
+      <tbody id="ventasBody"></tbody></table>
+    </div>
+  </div>
+
+  <!-- ══ PG: INVENTARIO (POS) ══ -->
+  <div class="pg" id="pg-inventario">
+    <div class="stitle">Stock Actual</div>
+    <div class="info-box">📦 El inventario se descuenta automáticamente con cada venta. Actualiza el stock cuando recibas mercancía.</div>
+    <div style="overflow-x:auto">
+      <table><thead><tr><th>Ingrediente</th><th>Stock Actual</th><th>Unidad</th><th>Costo Unitario</th><th>Estado</th><th>Acción</th></tr></thead>
+      <tbody id="invBodyPOS"></tbody></table>
+    </div>
+  </div>
+
+  <!-- ══ PG: CONTABILIDAD ══ -->
+  <div class="pg" id="pg-contabilidad">
+    <div class="stitle">Contabilidad & Caja</div>
+    <div class="conta-grid" id="contaCards"></div>
+    <div class="stitle" style="font-size:18px">💼 Reparto de Utilidades — Mes Actual</div>
+    <div class="socios-grid" id="sociosCards"></div>
+    <div class="div-line"></div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+      <button class="btn btn-f" onclick="imprimirCuadre('dia')">🖨️ Cuadre Diario</button>
+      <button class="btn btn-f" onclick="imprimirCuadre('semana')">🖨️ Cuadre Semanal</button>
+      <button class="btn btn-f" onclick="imprimirCuadre('mes')">🖨️ Cuadre Mensual</button>
+    </div>
+  </div>
+
+  <!-- ══ PG: COSTOS ══ -->
+  <div class="pg" id="pg-costos">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:16px">
+      <div class="stitle" style="margin:0">Costos de Ingredientes</div>
+    </div>
+    <div class="info-box">💡 Cambia el precio de cualquier ingrediente y el sistema recalculará automáticamente el costo de todos los productos.</div>
+    <div style="overflow-x:auto">
+      <table><thead><tr><th>Ingrediente</th><th>Unidad</th><th>Precio</th><th>Precio/g o unitario</th><th>Acción</th></tr></thead>
+      <tbody id="costosBody"></tbody></table>
+    </div>
+    <div class="div-line"></div>
+    <div class="stitle" style="font-size:18px">Costo por Producto</div>
+    <div style="overflow-x:auto">
+      <table><thead><tr><th>Producto</th><th>Precio Venta</th><th>Costo Ingredientes</th><th>Empaque</th><th>Costo Total</th><th>Margen</th><th>% Margen</th></tr></thead>
+      <tbody id="margenesBody"></tbody></table>
+    </div>
+  </div>
+
+  <!-- ══ PG: RECETAS ══ -->
+  <div class="pg" id="pg-recetas">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:16px">
+      <div class="stitle" style="margin:0">Recetas & Productos</div>
+      <button class="btn btn-f" onclick="abrirNuevoProducto()">+ Nuevo Producto</button>
+    </div>
+    <div id="recetasList"></div>
+  </div>
+
+  <!-- ══ PG: GASTOS ══ -->
+  <div class="pg" id="pg-gastos">
+    <div class="stitle">Registrar Gastos</div>
+    <div class="sbox">
+      <div class="fg">
+        <label>Descripción<input class="inp" id="gDesc" placeholder="Ej: Compra carne" style="width:220px"></label>
+        <label>Monto ($)<input class="inp" id="gMonto" type="number" style="width:130px"></label>
+        <label>Categoría<select class="sel" id="gCat">
+          <option value="insumos">Insumos</option><option value="fijo">Costo fijo</option>
+          <option value="servicio">Servicios</option><option value="nomina">Nómina</option>
+          <option value="otro">Otro</option>
+        </select></label>
+        <label>Método<select class="sel" id="gMetodo">
+          <option>Efectivo</option><option>Transferencia</option><option>Tarjeta</option>
+        </select></label>
+        <button class="btn btn-f" onclick="registrarGasto()" style="align-self:flex-end">Registrar</button>
+      </div>
+    </div>
+    <div class="stitle" style="font-size:18px">Gastos del Mes</div>
+    <div style="overflow-x:auto">
+      <table><thead><tr><th>Fecha</th><th>Descripción</th><th>Categoría</th><th>Monto</th><th>Método</th></tr></thead>
+      <tbody id="gastosBody"></tbody></table>
+    </div>
+  </div>
+
+  <!-- ══ PG: INVENTARIO ADMIN ══ -->
+  <div class="pg" id="pg-invAdmin">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:16px">
+      <div class="stitle" style="margin:0">Control de Inventario</div>
+    </div>
+    <div class="info-box">⚡ Actualiza el stock cuando recibas mercancía nueva. El sistema lo descuenta automáticamente con cada venta.</div>
+    <div style="overflow-x:auto">
+      <table><thead><tr><th>Ingrediente</th><th>Stock Actual</th><th>Unidad</th><th>Costo Unitario</th><th>Valor Stock</th><th>Estado</th><th>Acción</th></tr></thead>
+      <tbody id="invAdminBody"></tbody></table>
+    </div>
+  </div>
+
+  <!-- ══ PG: REPORTES ══ -->
+  <div class="pg" id="pg-reportes">
+    <div class="stitle">Reportes y Análisis</div>
+    <div class="fg" style="margin-bottom:20px">
+      <label>Período
+        <select class="sel" id="reportePeriodo" onchange="renderReportes()">
+          <option value="dia">Hoy</option>
+          <option value="semana">Esta semana</option>
+          <option value="mes" selected>Este mes</option>
+        </select>
+      </label>
+    </div>
+    <div id="reporteContent"></div>
+  </div>
+</div>
+
+
+  <!-- ══ PG: SOCIOS ══ -->
+  <div class="pg" id="pg-socios">
+    <div class="stitle">👥 Socios y Reparto</div>
+    <div class="info-box">💡 Edita los nombres y porcentajes de los socios. La suma debe ser 100%.</div>
+    <div class="sbox" style="max-width:500px">
+      <div id="sociosList"></div>
+      <button class="btn btn-f" style="margin-top:12px;width:100%;padding:12px" onclick="guardarSocios()">💾 Guardar Socios</button>
+    </div>
+  </div>
+
+  <!-- ══ PG: EMAIL CONFIG ══ -->
+  <div class="pg" id="pg-emailconfig">
+    <div class="stitle">📧 Reporte Diario por Correo</div>
+    <div class="info-box">
+      ⚡ El sistema puede enviarte un resumen del día automáticamente por correo.<br>
+      Usa <strong>EmailJS</strong> (gratis hasta 200 correos/mes). Configura una vez y listo.
+    </div>
+    <div class="sbox" style="max-width:560px">
+      <div class="stitle" style="font-size:16px;margin-bottom:16px">⚙️ Configuración EmailJS</div>
+      <div style="background:rgba(255,77,0,.07);border:1px solid rgba(255,77,0,.2);border-radius:3px;padding:12px 14px;margin-bottom:16px;font-size:12px;color:var(--gris);line-height:1.8">
+        <strong style="color:var(--fuego)">Pasos para configurar:</strong><br>
+        1. Crea cuenta gratuita en <strong style="color:var(--crema)">emailjs.com</strong><br>
+        2. Crea un "Email Service" (Gmail, Outlook, etc.)<br>
+        3. Crea un "Email Template" con variables: <code style="color:var(--oro)">{{reporte}}</code><br>
+        4. Copia el <strong style="color:var(--crema)">Service ID</strong>, <strong style="color:var(--crema)">Template ID</strong> y <strong style="color:var(--crema)">Public Key</strong><br>
+        5. Pégalos aquí y guarda ✅
+      </div>
+      <div class="mfl" style="gap:12px">
+        <label style="flex-direction:column;gap:4px;font-size:11px;color:var(--gris);text-transform:uppercase;letter-spacing:1px">
+          EmailJS Public Key
+          <input class="inp" id="ejPublicKey" placeholder="user_xxxxxxxxxx" style="width:100%">
+        </label>
+        <label style="flex-direction:column;gap:4px;font-size:11px;color:var(--gris);text-transform:uppercase;letter-spacing:1px">
+          Service ID
+          <input class="inp" id="ejServiceId" placeholder="service_xxxxxxx" style="width:100%">
+        </label>
+        <label style="flex-direction:column;gap:4px;font-size:11px;color:var(--gris);text-transform:uppercase;letter-spacing:1px">
+          Template ID
+          <input class="inp" id="ejTemplateId" placeholder="template_xxxxxxx" style="width:100%">
+        </label>
+        <label style="flex-direction:column;gap:4px;font-size:11px;color:var(--gris);text-transform:uppercase;letter-spacing:1px">
+          Correo destino (donde llega el reporte)
+          <input class="inp" id="ejDestino" placeholder="admin@zonabreak.com" type="email" style="width:100%">
+        </label>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-f" onclick="guardarConfigEmail()">💾 Guardar Configuración</button>
+          <button class="btn btn-o" onclick="enviarReporteAhora()">📤 Enviar Reporte Ahora (prueba)</button>
+        </div>
+        <div id="emailStatus" style="font-size:13px;color:var(--gris);margin-top:4px"></div>
+      </div>
+    </div>
+    <div class="div-line"></div>
+    <div class="sbox" style="max-width:560px">
+      <div class="stitle" style="font-size:16px;margin-bottom:12px">📅 Envío Automático</div>
+      <div style="font-size:13px;color:var(--gris);line-height:1.8;margin-bottom:12px">
+        El reporte diario se envía automáticamente cada vez que el Admin abre el POS después de las <strong style="color:var(--crema)">11:00 PM</strong>, o puedes enviarlo manualmente en cualquier momento.
+      </div>
+      <div style="font-size:12px;color:var(--gris)">
+        Último envío: <span id="ultimoEnvio" style="color:var(--oro)">—</span>
+      </div>
+    </div>
+  </div>
+
+<!-- MODAL PAGO -->
+<div class="mbg" id="mPago">
+  <div class="mbox">
+    <div class="mhdr"><span class="mhdr-t">💰 Confirmar Venta</span><button class="mx" onclick="closeM('mPago')">✕</button></div>
+    <div class="mbdy">
+      <div class="mfl">
+        <label>Cliente<input class="inp" id="mPagoCliente" placeholder="Nombre del cliente"></label>
+        <label>Tipo<select class="sel" id="mPagoTipo">
+          <option value="local">🏪 Local</option><option value="domicilio">🛵 Domicilio</option><option value="rappi">🟠 Rappi</option>
+        </select></label>
+        <label>Método de pago<select class="sel" id="mPagoMetodo">
+          <option>Efectivo</option><option>Nequi</option><option>Daviplata</option>
+          <option>Bancolombia</option><option>Datáfono Débito</option><option>Datáfono Crédito</option><option>Cortesía</option>
+        </select></label>
+        <label>Tipo especial<select class="sel" id="mPagoEspec">
+          <option value="normal">Normal</option>
+          <option value="empleado">👤 Empleado (−30%)</option>
+          <option value="cortesia">🎁 Cortesía ($0)</option>
+        </select></label>
+        <div style="background:var(--negro4);border-radius:3px;padding:12px;font-family:'Barlow Condensed',sans-serif">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:14px;color:var(--gris)"><span>Subtotal</span><span id="mPagoSub">$0</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:20px;font-weight:900;color:var(--oro)"><span>TOTAL</span><span id="mPagoTotal">$0</span></div>
+        </div>
+        <button class="btn btn-v" style="width:100%;padding:14px;font-size:18px" onclick="confirmarVenta()">✅ CONFIRMAR Y COBRAR</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL STOCK -->
+<div class="mbg" id="mStock">
+  <div class="mbox">
+    <div class="mhdr"><span class="mhdr-t" id="mStockTitulo">Actualizar Stock</span><button class="mx" onclick="closeM('mStock')">✕</button></div>
+    <div class="mbdy">
+      <div class="mfl">
+        <label>Operación<select class="sel" id="mStockOp"><option value="add">➕ Agregar stock</option><option value="set">🔄 Establecer stock exacto</option><option value="sub">➖ Descontar</option></select></label>
+        <label>Cantidad<input class="inp" id="mStockCant" type="number" min="0" step="0.1" placeholder="0"></label>
+        <input type="hidden" id="mStockId">
+        <button class="btn btn-f" style="width:100%;padding:12px" onclick="confirmarStock()">GUARDAR</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL COSTO -->
+<div class="mbg" id="mCosto">
+  <div class="mbox">
+    <div class="mhdr"><span class="mhdr-t" id="mCostoTitulo">Editar Costo</span><button class="mx" onclick="closeM('mCosto')">✕</button></div>
+    <div class="mbdy">
+      <div class="mfl">
+        <label>Nuevo precio (por unidad/kg/litro)<input class="inp" id="mCostoPrecio" type="number" min="0"></label>
+        <input type="hidden" id="mCostoId">
+        <button class="btn btn-f" style="width:100%;padding:12px" onclick="confirmarCosto()">GUARDAR</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PRODUCTO -->
+<div class="mbg" id="mProducto">
+  <div class="mbox" style="max-width:600px">
+    <div class="mhdr"><span class="mhdr-t" id="mProdTitulo">Nuevo Producto</span><button class="mx" onclick="closeM('mProducto')">✕</button></div>
+    <div class="mbdy">
+      <div class="mfl">
+        <label>ID único (sin espacios)<input class="inp" id="mpId" placeholder="ej: nuevaBurger"></label>
+        <label>Nombre<input class="inp" id="mpNombre" placeholder="La Nueva Burger"></label>
+        <label>Categoría<select class="sel" id="mpCat">
+          <option value="hamburguesas">🍔 Hamburguesas</option><option value="perros">🌭 Perros</option>
+          <option value="picadas">🍖 Picadas</option><option value="extras">🍟 Extras</option>
+        </select></label>
+        <label>Precio de venta ($)<input class="inp" id="mpPrecio" type="number"></label>
+        <label>Descripción<input class="inp" id="mpDesc" placeholder="Descripción del producto"></label>
+        <label>Emoji<input class="inp" id="mpEmoji" placeholder="🍔" style="width:80px"></label>
+        <label>URL foto (opcional)<input class="inp" id="mpFoto" placeholder="https://..."></label>
+        <button class="btn btn-f" style="width:100%;padding:12px" onclick="guardarProducto()">💾 GUARDAR PRODUCTO</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"><div class="toast-t" id="toastT"></div><div class="toast-b" id="toastB"></div></div>
+
+<script>
+// ── USUARIOS ─────────────────────────────────────────────
+const USUARIOS = {
+  marlon: { pass:'marlon123', nombre:'Marlon', rol:'pos'   },
+  jesus:  { pass:'jesus123',  nombre:'Jesús',  rol:'pos'   },
+  didier: { pass:'didier123', nombre:'Didier', rol:'pos'   },
+  admin:  { pass:'zonabreak123', nombre:'Admin', rol:'admin' },
+};
+
+let modoLogin = 'pos';
+let usuarioActual = null;
+let ordenPOS = [];
+let toastTimer = null;
+
+// ── LOGIN ────────────────────────────────────────────────
+function seleccionarModo(m) {
+  modoLogin = m;
+  document.getElementById('modePOS').classList.toggle('sel', m==='pos');
+  document.getElementById('modeAdmin').classList.toggle('sel', m==='admin');
+}
+
+function doLogin() {
+  const u = document.getElementById('loginUser').value.trim().toLowerCase();
+  const p = document.getElementById('loginPass').value;
+  const user = USUARIOS[u];
+  if (!user || user.pass !== p) {
+    document.getElementById('loginErr').style.display = 'block'; return;
+  }
+  if (modoLogin === 'admin' && user.rol !== 'admin') {
+    document.getElementById('loginErr').style.display = 'block';
+    document.getElementById('loginErr').textContent = 'No tienes acceso admin';
+    return;
+  }
+  usuarioActual = { ...user, user: u };
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display   = 'flex';
+  document.getElementById('topbarUser').textContent     = user.nombre;
+  document.getElementById('topbarModo').textContent     = modoLogin === 'admin' ? '🔒 ADMIN' : '⚡ POS';
+  // Mostrar tabs correctos
+  document.getElementById('tabsPOS').style.display   = modoLogin === 'pos'   ? 'flex' : 'none';
+  document.getElementById('tabsAdmin').style.display = modoLogin === 'admin' ? 'flex' : 'none';
+  document.querySelectorAll('.pg').forEach(p => p.classList.remove('active'));
+  if (modoLogin === 'pos') {
+    document.getElementById('pg-vender').classList.add('active');
+    renderPosProductos();
+  } else {
+    document.getElementById('pg-contabilidad').classList.add('active');
+    renderContabilidad();
+  }
+}
+
+function doLogout() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('appScreen').style.display   = 'none';
+  document.getElementById('loginUser').value = '';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('loginErr').style.display = 'none';
+  document.getElementById('loginErr').textContent = 'Usuario o contraseña incorrectos';
+  ordenPOS = [];
+  usuarioActual = null;
+}
+
+// ── TABS ────────────────────────────────────────────────
+function showPg(id, btn) {
+  document.querySelectorAll('.pg').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('pg-' + id).classList.add('active');
+  btn.classList.add('active');
+  const renders = {
+    ventas: renderVentasHoy, inventario: renderInvPOS,
+    contabilidad: renderContabilidad, costos: renderCostos,
+    recetas: renderRecetas, gastos: renderGastos,
+    invAdmin: renderInvAdmin, reportes: renderReportes,
+  };
+  if (renders[id]) renders[id]();
+}
+
+// ── POS: PRODUCTOS ───────────────────────────────────────
+function renderPosProductos() {
+  const recetas = getRecetas();
+  const cat     = document.getElementById('posCatFilter')?.value || 'all';
+  const buscar  = (document.getElementById('posBuscar')?.value || '').toLowerCase();
+  const prods   = Object.entries(recetas)
+    .filter(([,r]) => (cat === 'all' || r.categoria === cat) && r.nombre.toLowerCase().includes(buscar));
+
+  document.getElementById('posProductos').innerHTML = prods.map(([id, r]) => {
+    const costo = calcCostoProducto(id);
+    return `
+      <div class="pos-card" onclick="agregarPOS('${id}')">
+        <div class="pos-card-img">
+          <img src="${r.fotoUrl||r.foto||''}" alt="${r.nombre}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+          <div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:40px">${r.emoji}</div>
+        </div>
+        <div class="pos-card-body">
+          <div class="pos-card-nombre">${r.nombre}</div>
+          <div class="pos-card-precio">${fmt(r.precio)}</div>
+          <div class="pos-card-costo">Costo: ${fmt(costo)} | Margen: ${fmt(r.precio - costo)}</div>
+        </div>
+      </div>`;
+  }).join('') || '<p style="color:var(--gris);padding:20px;grid-column:1/-1">Sin productos en esta categoría.</p>';
+}
+
+function agregarPOS(id) {
+  const recetas = getRecetas();
+  const r = recetas[id];
+  if (!r) return;
+  const ex = ordenPOS.find(o => o.id === id);
+  if (ex) ex.qty++;
+  else ordenPOS.push({ id, nombre: r.nombre, precio: r.precio, emoji: r.emoji, qty: 1 });
+  renderOrdenPOS();
+}
+
+function renderOrdenPOS() {
+  const empty  = document.getElementById('posOrdenEmpty');
+  const items  = document.getElementById('posOrdenItems');
+  const cobrar = document.getElementById('btnCobrar');
+  if (!ordenPOS.length) { empty.style.display=''; items.innerHTML=''; cobrar.disabled=true; actualizarTotalesPOS(); return; }
+  empty.style.display = 'none';
+  cobrar.disabled = false;
+  items.innerHTML = ordenPOS.map(o => `
+    <div class="oi">
+      <span style="font-size:18px">${o.emoji}</span>
+      <span class="oi-name">${o.nombre}</span>
+      <div class="oi-ctrl">
+        <button class="oi-btn" onclick="cambiarPOS('${o.id}',-1)">−</button>
+        <span class="oi-qty">${o.qty}</span>
+        <button class="oi-btn" onclick="cambiarPOS('${o.id}',1)">+</button>
+      </div>
+      <span class="oi-total">${fmt(o.precio * o.qty)}</span>
+    </div>`).join('');
+  actualizarTotalesPOS();
+}
+
+function cambiarPOS(id, delta) {
+  const item = ordenPOS.find(o => o.id === id);
+  if (!item) return;
+  item.qty += delta;
+  if (item.qty <= 0) ordenPOS = ordenPOS.filter(o => o.id !== id);
+  renderOrdenPOS();
+}
+
+function actualizarTotalesPOS() {
+  const sub     = ordenPOS.reduce((s, o) => s + o.precio * o.qty, 0);
+  const costo   = ordenPOS.reduce((s, o) => s + calcCostoProducto(o.id) * o.qty, 0);
+  const servOn  = document.getElementById('posServicio')?.checked;
+  const servVal = servOn ? Math.round(sub * 0.08) : 0;
+  const total   = sub + servVal;
+  if(document.getElementById('posSubtotal')) document.getElementById('posSubtotal').textContent = fmt(sub);
+  if(document.getElementById('posServicioVal')) document.getElementById('posServicioVal').textContent = servOn ? fmt(servVal) : '$0';
+  document.getElementById('posTotal').textContent    = fmt(total);
+  document.getElementById('posCosto').textContent    = fmt(costo);
+  document.getElementById('posGanancia').textContent = fmt(total - costo);
+  window._posTotal = total; window._posServicio = servVal; window._posSub = sub;
+}
+
+function cobrarVenta() {
+  if (!ordenPOS.length) return;
+  const total = window._posTotal || ordenPOS.reduce((s, o) => s + o.precio * o.qty, 0);
+  const sub   = window._posSub   || total;
+  document.getElementById('mPagoCliente').value = document.getElementById('posCliente').value;
+  document.getElementById('mPagoMetodo').value  = document.getElementById('posPago').value;
+  document.getElementById('mPagoEspec').value   = 'normal';
+  document.getElementById('mPagoSub').textContent   = fmt(sub);
+  document.getElementById('mPagoTotal').textContent  = fmt(total);
+  document.getElementById('mPagoEspec').onchange = recalcModal;
+  openM('mPago');
+}
+
+function recalcModal() {
+  const sub   = ordenPOS.reduce((s, o) => s + o.precio * o.qty, 0);
+  const espec = document.getElementById('mPagoEspec').value;
+  let total   = sub;
+  if (espec === 'empleado') total = Math.round(sub * 0.70);
+  if (espec === 'cortesia') total = 0;
+  document.getElementById('mPagoTotal').textContent = fmt(total);
+}
+
+async function confirmarVenta() {
+  const sub    = ordenPOS.reduce((s, o) => s + o.precio * o.qty, 0);
+  const espec  = document.getElementById('mPagoEspec').value;
+  let total    = sub;
+  if (espec === 'empleado') total = Math.round(sub * 0.70);
+  if (espec === 'cortesia') total = 0;
+  const ahora  = new Date();
+  const venta  = {
+    id:         uid(),
+    fecha:      hoy(),
+    semana:     semanaKey(),
+    mes:        mesActual(),
+    hora:       ahora.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}),
+    cliente:    document.getElementById('mPagoCliente').value || 'Sin nombre',
+    tipo:       document.getElementById('mPagoTipo').value,
+    pago:       document.getElementById('mPagoMetodo').value,
+    espec,
+    items:      ordenPOS.map(o => ({ id:o.id, nombre:o.nombre, precio:o.precio, qty:o.qty })),
+    subtotal:   sub,
+    servicio:   window._posServicio||0,
+    total:      window._posTotal||sub,
+    fuente:     'pos',
+    usuario:    usuarioActual?.nombre || 'POS',
+    timestamp:  ahora.getTime(),
+  };
+  saveVenta(venta);
+  descontarInventario(ordenPOS.map(o => ({ id:o.id, qty:o.qty })));
+  closeM('mPago');
+  ordenPOS = [];
+  renderOrdenPOS();
+  document.getElementById('posCliente').value = '';
+  showToast('✅ Venta registrada', venta.cliente + ' · ' + fmt(total));
+}
+
+function imprimirTicket() {
+  if (!ordenPOS.length) { showToast('Sin productos','Agrega productos primero'); return; }
+  const total  = ordenPOS.reduce((s, o) => s + o.precio * o.qty, 0);
+  const items  = ordenPOS.map(o => `<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dotted #ccc"><span>${o.qty}x ${o.nombre}</span><span>${fmt(o.precio*o.qty)}</span></div>`).join('');
+  const ahora  = new Date();
+  const w      = window.open('','_blank','width=420,height=600');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Courier New',monospace;font-size:13px;width:80mm;margin:0 auto;padding:8px;color:#000;background:#fff;}
+.center{text-align:center;}.bold{font-weight:bold;}.xl{font-size:20px;}
+.sep{border:none;border-top:1px dashed #000;margin:8px 0;}
+.total{display:flex;justify-content:space-between;font-size:18px;font-weight:bold;border-top:2px solid #000;padding-top:6px;margin-top:4px;}
+@media print{body{width:80mm;}@page{margin:0;size:80mm auto;}}
+</style></head><body>
+<div class="center"><div class="xl bold">ZONA BREAK</div><div>★ Cocina Urbana ★</div></div>
+<hr class="sep">
+<div>${ahora.toLocaleDateString('es-CO')} ${ahora.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'})}</div>
+<div>Usuario: ${usuarioActual?.nombre||'POS'}</div>
+<hr class="sep">
+${items}
+<hr class="sep">
+<div class="total"><span>TOTAL</span><span>${fmt(total)}</span></div>
+<hr class="sep">
+<div class="center" style="margin-top:8px;font-size:11px">¡Gracias por tu visita!<br>🔥 Zona Break — La calle tiene sabor</div>
+<script>window.onload=()=>{window.print();setTimeout(()=>window.close(),500);}<\/script>
+</body></html>`);
+  w.document.close();
+}
+
+// ── VENTAS HOY ───────────────────────────────────────────
+function renderVentasHoy() {
+  const ventas = getVentas().filter(v => v.fecha === hoy());
+  const total  = ventas.reduce((s,v)=>s+(v.total||0),0);
+  const costoT = ventas.reduce((s,v)=>s+(v.items||[]).reduce((si,i)=>si+calcCostoProducto(i.id)*i.qty,0),0);
+  const localT=ventas.filter(v=>!v.tipo||v.tipo==='local').reduce((s,v)=>s+(v.total||0),0);
+  const domT=ventas.filter(v=>v.tipo==='domicilio').reduce((s,v)=>s+(v.total||0),0);
+  const rappiT=ventas.filter(v=>v.tipo==='rappi').reduce((s,v)=>s+(v.total||0),0);
+  document.getElementById('statsHoy').innerHTML = `
+    <div class="stat-card"><div class="stat-label">Ventas Hoy</div><div class="stat-val fuego">${ventas.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Total Ingresos</div><div class="stat-val oro">${fmt(total)}</div></div>
+    <div class="stat-card"><div class="stat-label">🏪 Local</div><div class="stat-val" style="color:var(--azul)">${fmt(localT)}</div></div>
+    <div class="stat-card"><div class="stat-label">🛵 Domicilios</div><div class="stat-val" style="color:var(--purple)">${fmt(domT)}</div></div>
+    <div class="stat-card"><div class="stat-label">🟠 Rappi</div><div class="stat-val" style="color:var(--orange)">${fmt(rappiT)}</div></div>
+    <div class="stat-card"><div class="stat-label">Costo</div><div class="stat-val rojo">${fmt(costoT)}</div></div>
+    <div class="stat-card"><div class="stat-label">Ganancia</div><div class="stat-val verde">${fmt(total-costoT)}</div></div>`;
+  document.getElementById('ventasBody').innerHTML = ventas.length ? ventas.map(v => `<tr>
+    <td><span style="font-family:'Barlow Condensed';font-size:12px;color:var(--gris)">${v.id}</span></td>
+    <td>${v.hora||'—'}</td>
+    <td>${v.cliente||'—'}</td>
+    <td style="font-size:12px">${(v.items||[]).map(i=>i.qty+'x '+i.nombre).join(', ')}</td>
+    <td style="font-family:'Barlow Condensed';font-size:16px;font-weight:900;color:var(--oro)">${fmt(v.total)}</td>
+    <td>${v.pago||v.fuente||'—'}</td>
+    <td><span class="badge ${v.fuente==='menu'?'b-azul':'b-fuego'}">${v.fuente==='menu'?'Online':'POS'}</span></td>
+    </tr>`).join('') : '<tr><td colspan="7" style="color:var(--gris);padding:20px">Sin ventas hoy.</td></tr>';
+}
+
+// ── INVENTARIO POS ───────────────────────────────────────
+function renderInvPOS() {
+  const inv    = getInventario();
+  const costos = getCostos();
+  document.getElementById('invBodyPOS').innerHTML = Object.entries(inv).map(([id, item]) => {
+    const c     = costos[id];
+    const stock = item.stock || 0;
+    const estado = stock <= 0 ? ['b-rojo','AGOTADO'] : stock < 1 ? ['b-oro','BAJO'] : ['b-verde','OK'];
+    const pct   = Math.min(100, stock * 20);
+    const clr   = stock <= 0 ? 'var(--rojo)' : stock < 1 ? 'var(--oro)' : 'var(--verde)';
+    return `<tr>
+      <td><strong>${c?.nombre||id}</strong></td>
+      <td>${stock.toFixed(2)}<div class="inv-bar-wrap"><div class="inv-bar" style="width:${pct}%;background:${clr}"></div></div></td>
+      <td>${item.unidad||'—'}</td>
+      <td style="color:var(--oro)">${c?fmt(c.precio):'—'}</td>
+      <td><span class="badge ${estado[0]}">${estado[1]}</span></td>
+      <td><button class="btn btn-o btn-sm" onclick="abrirStock('${id}')">± Ajustar</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── CONTABILIDAD ─────────────────────────────────────────
+function renderContabilidad() {
+  const periodos = ['dia','semana','mes'];
+  const labels   = { dia:'Hoy', semana:'Esta Semana', mes:'Este Mes' };
+  document.getElementById('contaCards').innerHTML = periodos.map(p => {
+    const r = resumenVentas(p);
+    return `<div class="conta-card">
+      <div class="conta-periodo">${labels[p]}</div>
+      <div class="conta-row"><span class="conta-label">Ventas totales</span><span class="conta-value oro">${fmt(r.totalVentas)}</span></div>
+      <div class="conta-row"><span class="conta-label">Costo ingredientes</span><span class="conta-value rojo">${fmt(r.totalCostos)}</span></div>
+      <div class="conta-row"><span class="conta-label">Ganancia bruta</span><span class="conta-value verde">${fmt(r.gananciaBruta)}</span></div>
+      <div class="conta-row"><span class="conta-label">Gastos operativos</span><span class="conta-value rojo">${fmt(r.totalGastos)}</span></div>
+      <div class="conta-row"><span class="conta-label">Costos fijos</span><span class="conta-value rojo">${fmt(r.costoFijo)}</span></div>
+      <div class="conta-total">
+        <span style="color:var(--gris);font-size:16px">Ganancia Neta</span>
+        <span style="color:${r.gananciaNeta>=0?'var(--verde)':'var(--rojo)'}">${fmt(r.gananciaNeta)}</span>
+      </div>
+    </div>`;
+  }).join('');
+  // Socios (mes)
+  const rMes = resumenVentas('mes');
+  const socios = getSocios();
+  document.getElementById('sociosCards').innerHTML = socios.map(s => {
+    const val = rMes.gananciaNeta > 0 ? rMes.gananciaNeta * s.porcentaje / 100 : 0;
+    return `<div class="socio-card">
+      <div class="socio-nombre">${s.nombre}</div>
+      <div class="socio-pct">${s.porcentaje}% de utilidad neta</div>
+      <div class="socio-valor">${fmt(val)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── COSTOS ───────────────────────────────────────────────
+function renderCostos() {
+  const costos  = getCostos();
+  const recetas = getRecetas();
+  document.getElementById('costosBody').innerHTML = Object.entries(costos).map(([id, c]) => {
+    const precioUnitario = id === 'costosFijos' ? c.precio : c.precio;
+    return `<tr>
+      <td><strong>${c.nombre}</strong></td>
+      <td><span class="badge b-oro">${c.unidad}</span></td>
+      <td style="font-family:'Barlow Condensed';font-size:18px;font-weight:900;color:var(--oro)">${fmt(c.precio)}</td>
+      <td style="font-size:12px;color:var(--gris)">${id==='panHamburguesa'||id==='panPerro'||id==='empaque'?'Precio directo':id==='costosFijos'?'Por mes':fmt(c.precio/1000)+'/g'}</td>
+      <td><button class="btn btn-o btn-sm" onclick="abrirCosto('${id}')">✏️ Editar</button></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('margenesBody').innerHTML = Object.entries(recetas).map(([id, r]) => {
+    const costo  = calcCostoProducto(id);
+    const margen = r.precio - costo;
+    const pct    = r.precio > 0 ? Math.round(margen/r.precio*100) : 0;
+    const color  = pct > 60 ? 'var(--verde)' : pct > 40 ? 'var(--oro)' : 'var(--rojo)';
+    return `<tr>
+      <td><strong>${r.nombre}</strong></td>
+      <td style="font-family:'Barlow Condensed';font-size:16px;color:var(--oro)">${fmt(r.precio)}</td>
+      <td style="color:var(--rojo)">${fmt(costo)}</td>
+      <td style="color:var(--gris)">${fmt(costos.empaque?.precio||4000)}</td>
+      <td style="color:var(--rojo)">${fmt(costo)}</td>
+      <td style="font-family:'Barlow Condensed';font-size:18px;font-weight:900;color:${color}">${fmt(margen)}</td>
+      <td><span class="badge" style="background:${color}22;color:${color};border:1px solid ${color}44">${pct}%</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── RECETAS ──────────────────────────────────────────────
+function renderRecetas() {
+  const recetas = getRecetas();
+  const costos  = getCostos();
+  document.getElementById('recetasList').innerHTML = Object.entries(recetas).map(([id, r]) => {
+    const costo  = calcCostoProducto(id);
+    const margen = r.precio - costo;
+    const ingList = Object.entries(r.ingredientes).map(([ing, info]) => {
+      const c = costos[ing];
+      return `<span style="background:var(--negro4);padding:3px 8px;border-radius:2px;font-size:11px;margin:2px;display:inline-block">${info.cantidad}${info.unidad === 'g' || info.unidad === 'litro' || info.unidad === 'ml' ? info.unidad : ' '+info.unidad} ${c?.nombre||ing}</span>`;
+    }).join('');
+    return `<div class="sbox">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+        <div>
+          <div style="font-family:'Barlow Condensed';font-size:20px;font-weight:900;text-transform:uppercase">${r.emoji} ${r.nombre}</div>
+          <div style="font-size:12px;color:var(--gris);margin-top:3px">${r.categoria} · ${r.descripcion}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'Barlow Condensed';font-size:24px;font-weight:900;color:var(--oro)">${fmt(r.precio)}</div>
+          <div style="font-size:11px;color:var(--gris)">Costo: ${fmt(costo)} | Margen: <span style="color:${margen>0?'var(--verde)':'var(--rojo)'}">${fmt(margen)}</span></div>
+        </div>
+      </div>
+      <div style="margin-bottom:12px">${ingList}</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-o btn-sm" onclick="editarPrecio('${id}')">✏️ Editar Precio</button>
+        <button class="btn btn-r btn-sm" onclick="eliminarProducto('${id}')">🗑 Eliminar</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function editarPrecio(id) {
+  const recetas = getRecetas();
+  const r = recetas[id];
+  const np = prompt(`Nuevo precio para "${r.nombre}" (actual: ${fmt(r.precio)}):`, r.precio);
+  if (np === null || isNaN(Number(np))) return;
+  recetas[id].precio = Number(np);
+  saveRecetas(recetas);
+  renderRecetas();
+  showToast('✅ Precio actualizado', r.nombre);
+}
+
+function eliminarProducto(id) {
+  const recetas = getRecetas();
+  if (!confirm(`¿Eliminar "${recetas[id]?.nombre}"?`)) return;
+  delete recetas[id];
+  saveRecetas(recetas);
+  renderRecetas();
+  renderPosProductos();
+  showToast('🗑 Eliminado', '');
+}
+
+function abrirNuevoProducto() {
+  ['mpId','mpNombre','mpPrecio','mpDesc','mpEmoji','mpFoto'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('mpEmoji').value = '🍔';
+  openM('mProducto');
+}
+
+function guardarProducto() {
+  const id     = document.getElementById('mpId').value.trim().replace(/\s/g,'');
+  const nombre = document.getElementById('mpNombre').value.trim();
+  if (!id || !nombre) { alert('ID y nombre son obligatorios.'); return; }
+  const recetas = getRecetas();
+  recetas[id] = {
+    nombre,
+    categoria:   document.getElementById('mpCat').value,
+    precio:      Number(document.getElementById('mpPrecio').value) || 0,
+    descripcion: document.getElementById('mpDesc').value.trim(),
+    emoji:       document.getElementById('mpEmoji').value || '🍔',
+    foto:        document.getElementById('mpFoto').value.trim(),
+    fotoUrl:     document.getElementById('mpFoto').value.trim(),
+    ingredientes: {},
+  };
+  saveRecetas(recetas);
+  closeM('mProducto');
+  renderRecetas();
+  renderPosProductos();
+  showToast('✅ Producto creado', nombre);
+}
+
+// ── GASTOS ───────────────────────────────────────────────
+function renderGastos() {
+  const gastos = getGastos().filter(g => g.mes === mesActual());
+  const total  = gastos.reduce((s,g) => s+g.monto, 0);
+  document.getElementById('gastosBody').innerHTML = gastos.length ? gastos.map(g => `<tr>
+    <td>${g.fecha}</td>
+    <td>${g.descripcion}</td>
+    <td><span class="badge b-azul">${g.categoria}</span></td>
+    <td style="font-family:'Barlow Condensed';font-size:16px;color:var(--rojo)">−${fmt(g.monto)}</td>
+    <td>${g.metodo||'—'}</td>
+  </tr>`).join('') + `<tr style="font-weight:bold"><td colspan="3" style="text-align:right;color:var(--gris);font-family:'Barlow Condensed';letter-spacing:2px">TOTAL GASTOS MES</td><td style="font-family:'Barlow Condensed';font-size:20px;color:var(--rojo)">−${fmt(total)}</td><td></td></tr>`
+  : '<tr><td colspan="5" style="color:var(--gris);padding:20px">Sin gastos registrados este mes.</td></tr>';
+}
+
+function registrarGasto() {
+  const desc  = document.getElementById('gDesc').value.trim();
+  const monto = Number(document.getElementById('gMonto').value);
+  if (!desc || !monto) { showToast('Error','Completa descripción y monto'); return; }
+  saveGasto({
+    id: uid(), fecha: hoy(), semana: semanaKey(), mes: mesActual(),
+    descripcion: desc,
+    categoria: document.getElementById('gCat').value,
+    monto,
+    metodo: document.getElementById('gMetodo').value,
+  });
+  document.getElementById('gDesc').value  = '';
+  document.getElementById('gMonto').value = '';
+  renderGastos();
+  showToast('💸 Gasto registrado', fmt(monto));
+}
+
+// ── INVENTARIO ADMIN ────────────────────────────────────
+function renderInvAdmin() {
+  const inv    = getInventario();
+  const costos = getCostos();
+  document.getElementById('invAdminBody').innerHTML = Object.entries(inv).map(([id, item]) => {
+    const c      = costos[id];
+    const stock  = item.stock || 0;
+    const valor  = c ? stock * c.precio : 0;
+    const estado = stock <= 0 ? ['b-rojo','AGOTADO'] : stock < 1 ? ['b-oro','BAJO'] : ['b-verde','OK'];
+    const pct    = Math.min(100, stock * 20);
+    const clr    = stock <= 0 ? 'var(--rojo)' : stock < 1 ? 'var(--oro)' : 'var(--verde)';
+    return `<tr>
+      <td><strong>${c?.nombre||id}</strong></td>
+      <td>${stock.toFixed(2)}<div class="inv-bar-wrap"><div class="inv-bar" style="width:${pct}%;background:${clr}"></div></div></td>
+      <td>${item.unidad||'—'}</td>
+      <td style="color:var(--oro)">${c?fmt(c.precio):'—'}</td>
+      <td style="color:var(--verde)">${fmt(valor)}</td>
+      <td><span class="badge ${estado[0]}">${estado[1]}</span></td>
+      <td><button class="btn btn-o btn-sm" onclick="abrirStock('${id}')">± Actualizar</button></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── REPORTES ─────────────────────────────────────────────
+function renderReportes() {
+  const periodo = document.getElementById('reportePeriodo').value;
+  const r       = resumenVentas(periodo);
+  const ventas  = getVentas();
+  const recetas = getRecetas();
+  // Top productos
+  const conteo  = {};
+  ventas.filter(v => v[periodo==='dia'?'fecha':periodo==='semana'?'semana':'mes'] === (periodo==='dia'?hoy():periodo==='semana'?semanaKey():mesActual()))
+    .forEach(v => (v.items||[]).forEach(i => conteo[i.nombre] = (conteo[i.nombre]||0) + i.qty));
+  const top = Object.entries(conteo).sort((a,b)=>b[1]-a[1]).slice(0,5);
+
+  document.getElementById('reporteContent').innerHTML = `
+    <div class="stats-grid" style="margin-bottom:24px">
+      <div class="stat-card"><div class="stat-label"># Ventas</div><div class="stat-val fuego">${r.cantidadVentas}</div></div>
+      <div class="stat-card"><div class="stat-label">Ingresos</div><div class="stat-val oro">${fmt(r.totalVentas)}</div></div>
+      <div class="stat-card"><div class="stat-label">Costo total</div><div class="stat-val rojo">${fmt(r.totalCostos)}</div></div>
+      <div class="stat-card"><div class="stat-label">Gastos op.</div><div class="stat-val rojo">${fmt(r.totalGastos)}</div></div>
+      <div class="stat-card"><div class="stat-label">Costos fijos</div><div class="stat-val rojo">${fmt(r.costoFijo)}</div></div>
+      <div class="stat-card"><div class="stat-label">Ganancia neta</div><div class="stat-val ${r.gananciaNeta>=0?'verde':'rojo'}">${fmt(r.gananciaNeta)}</div></div>
+    </div>
+    <div class="sbox">
+      <div class="stitle" style="font-size:18px;margin-bottom:14px">🏆 Top Productos</div>
+      ${top.length ? top.map(([n,q],i) => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+          <span style="font-family:'Barlow Condensed';font-size:16px;font-weight:700">#${i+1} ${n}</span>
+          <span class="badge b-fuego">${q} uds</span>
+        </div>`).join('') : '<p style="color:var(--gris)">Sin datos para este período.</p>'}
+    </div>
+    <div class="sbox" style="margin-top:16px">
+      <div class="stitle" style="font-size:18px;margin-bottom:14px">💼 Reparto Socios</div>
+      <div class="socios-grid">
+        ${getSocios().map(s => {
+          const val = r.gananciaNeta > 0 ? r.gananciaNeta * s.porcentaje / 100 : 0;
+          return `<div class="socio-card"><div class="socio-nombre">${s.nombre}</div><div class="socio-pct">${s.porcentaje}%</div><div class="socio-valor">${fmt(val)}</div></div>`;
+        }).join('')}
+      </div>
+    </div>`;
+}
+
+// ── IMPRESIÓN CUADRE ─────────────────────────────────────
+function imprimirCuadre(periodo) {
+  const r      = resumenVentas(periodo);
+  const labels = { dia:'DIARIO', semana:'SEMANAL', mes:'MENSUAL' };
+  const ahora  = new Date();
+  const w      = window.open('','_blank','width=420,height=700');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8">
+<style>
+body{font-family:'Courier New',monospace;font-size:13px;width:80mm;margin:0 auto;padding:8px;color:#000;}
+.c{text-align:center;}.b{font-weight:bold;}.xl{font-size:20px;}
+.row{display:flex;justify-content:space-between;padding:4px 0;}
+.sep{border:none;border-top:1px dashed #000;margin:8px 0;}
+.total{font-size:18px;font-weight:bold;border-top:2px solid #000;padding-top:6px;}
+@media print{body{width:80mm;}@page{margin:0;size:80mm auto;}}
+</style></head><body>
+<div class="c"><div class="xl b">ZONA BREAK</div><div>★ Cocina Urbana ★</div></div>
+<hr class="sep">
+<div class="c b">CUADRE ${labels[periodo]}</div>
+<div class="c">${ahora.toLocaleDateString('es-CO')} ${ahora.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'})}</div>
+<hr class="sep">
+<div class="row"><span>Ventas realizadas</span><span>${r.cantidadVentas}</span></div>
+<div class="row"><span>Ingresos totales</span><span>${fmt(r.totalVentas)}</span></div>
+<hr class="sep">
+<div class="row"><span>Costo ingredientes</span><span>−${fmt(r.totalCostos)}</span></div>
+<div class="row"><span>Gastos operativos</span><span>−${fmt(r.totalGastos)}</span></div>
+<div class="row"><span>Costos fijos</span><span>−${fmt(r.costoFijo)}</span></div>
+<hr class="sep">
+<div class="row b" style="font-size:16px"><span>Ganancia Bruta</span><span>${fmt(r.gananciaBruta)}</span></div>
+<div class="row total"><span>GANANCIA NETA</span><span>${fmt(r.gananciaNeta)}</span></div>
+<hr class="sep">
+<div class="b">REPARTO SOCIOS:</div>
+${SOCIOS.map(s=>`<div class="row"><span>${s.nombre} (${s.porcentaje}%)</span><span>${fmt(r.gananciaNeta>0?r.gananciaNeta*s.porcentaje/100:0)}</span></div>`).join('')}
+<hr class="sep">
+<div class="c" style="font-size:11px">Zona Break — Sistema POS</div>
+<script>window.onload=()=>{window.print();setTimeout(()=>window.close(),500);}<\/script>
+</body></html>`);
+  w.document.close();
+}
+
+// ── STOCK MODAL ──────────────────────────────────────────
+function abrirStock(id) {
+  const costos = getCostos();
+  document.getElementById('mStockTitulo').textContent = 'Stock: ' + (costos[id]?.nombre||id);
+  document.getElementById('mStockId').value   = id;
+  document.getElementById('mStockCant').value = '';
+  openM('mStock');
+}
+
+function confirmarStock() {
+  const id   = document.getElementById('mStockId').value;
+  const op   = document.getElementById('mStockOp').value;
+  const cant = Number(document.getElementById('mStockCant').value);
+  if (isNaN(cant)) return;
+  const inv  = getInventario();
+  if (!inv[id]) inv[id] = { stock:0, unidad:'kg' };
+  if (op === 'add') inv[id].stock = (inv[id].stock||0) + cant;
+  else if (op === 'set') inv[id].stock = cant;
+  else inv[id].stock = Math.max(0, (inv[id].stock||0) - cant);
+  saveInventario(inv);
+  closeM('mStock');
+  renderInvPOS();
+  if (document.getElementById('pg-invAdmin').classList.contains('active')) renderInvAdmin();
+  showToast('✅ Stock actualizado', '');
+}
+
+// ── COSTO MODAL ──────────────────────────────────────────
+function abrirCosto(id) {
+  const costos = getCostos();
+  const c = costos[id];
+  document.getElementById('mCostoTitulo').textContent = 'Editar: ' + (c?.nombre||id);
+  document.getElementById('mCostoId').value     = id;
+  document.getElementById('mCostoPrecio').value = c?.precio || 0;
+  openM('mCosto');
+}
+
+function confirmarCosto() {
+  const id     = document.getElementById('mCostoId').value;
+  const precio = Number(document.getElementById('mCostoPrecio').value);
+  if (isNaN(precio)) return;
+  const costos = getCostos();
+  costos[id].precio = precio;
+  saveCostos(costos);
+  closeM('mCosto');
+  renderCostos();
+  showToast('✅ Costo actualizado', '');
+}
+
+
+// ── EMAIL CONFIG ──────────────────────────────────────
+const EMAIL_KEY = 'zb_email_config';
+
+function getEmailConfig() {
+  return LS(EMAIL_KEY, { publicKey:'', serviceId:'', templateId:'', destino:'', ultimoEnvio:'' });
+}
+
+function guardarConfigEmail() {
+  const cfg = {
+    publicKey:  document.getElementById('ejPublicKey').value.trim(),
+    serviceId:  document.getElementById('ejServiceId').value.trim(),
+    templateId: document.getElementById('ejTemplateId').value.trim(),
+    destino:    document.getElementById('ejDestino').value.trim(),
+    ultimoEnvio: getEmailConfig().ultimoEnvio || '',
+  };
+  LSS(EMAIL_KEY, cfg);
+  showToast('✅ Configuración guardada', 'EmailJS listo');
+  document.getElementById('emailStatus').textContent = '✅ Configuración guardada correctamente.';
+}
+
+function cargarConfigEmail() {
+  const cfg = getEmailConfig();
+  document.getElementById('ejPublicKey').value  = cfg.publicKey  || '';
+  document.getElementById('ejServiceId').value  = cfg.serviceId  || '';
+  document.getElementById('ejTemplateId').value = cfg.templateId || '';
+  document.getElementById('ejDestino').value    = cfg.destino    || '';
+  document.getElementById('ultimoEnvio').textContent = cfg.ultimoEnvio || 'Nunca';
+}
+
+function generarTextoReporte() {
+  const rDia  = resumenVentas('dia');
+  const rMes  = resumenVentas('mes');
+  const ventas = getVentas().filter(v => v.fecha === hoy());
+  const top   = {};
+  ventas.forEach(v => (v.items||[]).forEach(i => top[i.nombre] = (top[i.nombre]||0) + i.qty));
+  const topStr = Object.entries(top).sort((a,b)=>b[1]-a[1]).slice(0,5)
+    .map(([n,q]) => '  • ' + n + ': ' + q + ' uds').join('\n') || '  Sin ventas';
+
+  return `
+============================================
+  ZONA BREAK — REPORTE DIARIO
+  ${hoy()}
+============================================
+
+📊 RESUMEN DEL DÍA:
+  Ventas realizadas : ${rDia.cantidadVentas}
+  Ingresos totales  : ${fmt(rDia.totalVentas)}
+  Costo ingredientes: ${fmt(rDia.totalCostos)}
+  Gastos operativos : ${fmt(rDia.totalGastos)}
+  Ganancia bruta    : ${fmt(rDia.gananciaBruta)}
+  Ganancia neta     : ${fmt(rDia.gananciaNeta)}
+
+🏆 TOP PRODUCTOS HOY:
+${topStr}
+
+📅 ACUMULADO DEL MES (${mesActual()}):
+  Ingresos mes      : ${fmt(rMes.totalVentas)}
+  Costos mes        : ${fmt(rMes.totalCostos)}
+  Gastos mes        : ${fmt(rMes.totalGastos)}
+  Ganancia neta mes : ${fmt(rMes.gananciaNeta)}
+
+💼 REPARTO SOCIOS (MES):
+  Socio 1 (50%)     : ${fmt(rMes.gananciaNeta > 0 ? rMes.gananciaNeta * 0.50 : 0)}
+  Socio 2 (30%)     : ${fmt(rMes.gananciaNeta > 0 ? rMes.gananciaNeta * 0.30 : 0)}
+  Socio 3 (20%)     : ${fmt(rMes.gananciaNeta > 0 ? rMes.gananciaNeta * 0.20 : 0)}
+
+============================================
+  Sistema POS Zona Break v5
+============================================`.trim();
+}
+
+async function enviarReporteAhora() {
+  const cfg = getEmailConfig();
+  const statusEl = document.getElementById('emailStatus');
+  if (!cfg.publicKey || !cfg.serviceId || !cfg.templateId || !cfg.destino) {
+    statusEl.textContent = '❌ Completa la configuración de EmailJS primero.';
+    statusEl.style.color = 'var(--rojo)';
+    return;
+  }
+  statusEl.textContent = '📤 Enviando...';
+  statusEl.style.color = 'var(--gris)';
+  try {
+    emailjs.init(cfg.publicKey);
+    await emailjs.send(cfg.serviceId, cfg.templateId, {
+      to_email: cfg.destino,
+      subject:  'Zona Break — Reporte Diario ' + hoy(),
+      reporte:  generarTextoReporte(),
+      fecha:    hoy(),
+    });
+    const ahora = hoy() + ' ' + new Date().toLocaleTimeString('es-CO', { hour:'2-digit', minute:'2-digit' });
+    cfg.ultimoEnvio = ahora;
+    LSS(EMAIL_KEY, cfg);
+    document.getElementById('ultimoEnvio').textContent = ahora;
+    statusEl.textContent = '✅ Reporte enviado a ' + cfg.destino;
+    statusEl.style.color = 'var(--verde)';
+    showToast('📧 Reporte enviado', cfg.destino);
+  } catch(e) {
+    statusEl.textContent = '❌ Error: ' + (e.text || e.message || 'Revisa la configuración.');
+    statusEl.style.color = 'var(--rojo)';
+    console.error('EmailJS error:', e);
+  }
+}
+
+function checkAutoEmail() {
+  // Auto-send if admin, after 11pm, and not sent today
+  if (!usuarioActual || usuarioActual.rol !== 'admin') return;
+  const cfg = getEmailConfig();
+  if (!cfg.publicKey || !cfg.destino) return;
+  const ahora = new Date();
+  if (ahora.getHours() < 23) return;  // Only after 11pm
+  const yaEnviado = (cfg.ultimoEnvio || '').startsWith(hoy());
+  if (!yaEnviado) {
+    setTimeout(() => enviarReporteAhora(), 3000);
+  }
+}
+
+
+// ── SOCIOS EDITOR ─────────────────────────────────────────
+function renderSocios() {
+  const socios = getSocios();
+  document.getElementById('sociosList').innerHTML = socios.map((s, i) => `
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.06)">
+      <span style="font-family:'Barlow Condensed';font-size:18px;color:var(--fuego);width:20px">${i+1}</span>
+      <input class="inp" value="${s.nombre}" id="snom_${i}" placeholder="Nombre socio" style="flex:2">
+      <input class="inp" value="${s.porcentaje}" id="spct_${i}" type="number" min="0" max="100" placeholder="%" style="width:70px">
+      <span style="color:var(--gris);font-size:12px">%</span>
+    </div>`).join('') + `
+    <div style="font-size:12px;color:var(--gris)">
+      Total: <span id="sociosTotalPct" style="color:var(--oro)">${socios.reduce((s,x)=>s+x.porcentaje,0)}%</span> (debe ser 100%)
+    </div>`;
+}
+
+function guardarSocios() {
+  const socios = getSocios().map((s, i) => ({
+    nombre: document.getElementById('snom_'+i)?.value.trim() || s.nombre,
+    porcentaje: Number(document.getElementById('spct_'+i)?.value) || s.porcentaje,
+  }));
+  const total = socios.reduce((s,x)=>s+x.porcentaje,0);
+  if (total !== 100) { showToast('❌ Error', 'La suma debe ser 100%. Actual: '+total+'%'); return; }
+  saveSocios(socios);
+  showToast('✅ Socios guardados', socios.map(s=>s.nombre+' '+s.porcentaje+'%').join(' · '));
+  renderContabilidad();
+}
+
+// ── UTILS ────────────────────────────────────────────────
+function openM(id)  { document.getElementById(id).classList.add('open'); }
+function closeM(id) { document.getElementById(id).classList.remove('open'); }
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.mbg.open').forEach(m => m.classList.remove('open'));
+});
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.mbg').forEach(m =>
+    m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }));
+});
+
+function showToast(titulo, cuerpo='') {
+  const t = document.getElementById('toast');
+  document.getElementById('toastT').textContent = titulo;
+  document.getElementById('toastB').textContent = cuerpo;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 4500);
+}
+</script>
+</body>
+</html>

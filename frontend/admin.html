@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Zona Break — Administración</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/css/brand.css" />
+  <style>
+    #login { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; background:radial-gradient(ellipse at center,rgba(201,162,39,.08),var(--zb-black)); }
+    .tabs { display:flex; gap:2px; overflow-x:auto; padding:10px 16px; background:var(--zb-black2); border-bottom:1px solid rgba(201,162,39,.15); scrollbar-width:none; }
+    .tabs::-webkit-scrollbar { display:none; }
+    .tabs button { flex-shrink:0; padding:10px 16px; border:none; background:transparent; color:var(--zb-muted); font-family:var(--font-display); font-size:.78rem; text-transform:uppercase; letter-spacing:.06em; cursor:pointer; border-bottom:2px solid transparent; transition:color .2s; white-space:nowrap; }
+    .tabs button.on { color:var(--zb-gold2); border-bottom-color:var(--zb-gold); }
+    .panel { display:none; max-width:1100px; margin:0 auto; padding:20px 16px 80px; }
+    .panel.on { display:block; }
+    table { width:100%; border-collapse:collapse; font-size:.86rem; }
+    th,td { padding:10px 12px; text-align:left; border-bottom:1px solid rgba(255,255,255,.06); }
+    th { color:var(--zb-gold2); font-family:var(--font-display); font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; background:var(--zb-black3); }
+    tr:hover td { background:rgba(255,255,255,.02); }
+    .stat-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:14px; margin-bottom:20px; }
+    .stat-card { background:var(--zb-black2); border:1px solid rgba(201,162,39,.15); border-radius:12px; padding:16px; }
+    .stat-val { font-family:var(--font-display); font-size:1.6rem; font-weight:900; color:var(--zb-gold2); }
+    .stat-label { font-size:.78rem; color:var(--zb-muted); margin-top:2px; }
+    .period-btn { padding:6px 14px; border-radius:999px; border:1px solid rgba(201,162,39,.25); background:transparent; color:var(--zb-muted); font-size:.72rem; font-family:var(--font-display); cursor:pointer; text-transform:uppercase; transition:all .2s; }
+    .period-btn.on { background:var(--zb-gold); color:var(--zb-black); border-color:var(--zb-gold); }
+    .section-h { font-family:var(--font-display); color:var(--zb-gold2); font-size:1.3rem; font-weight:800; margin:0 0 16px; text-transform:uppercase; }
+    .partner-row { display:flex; gap:10px; margin-bottom:8px; align-items:center; }
+    .partner-dist { display:flex; align-items:center; justify-content:space-between; padding:12px; border-radius:10px; background:var(--zb-black3); border:1px solid rgba(201,162,39,.1); margin-bottom:8px; }
+    .dist-bar-wrap { width:120px; height:6px; background:rgba(255,255,255,.08); border-radius:3px; overflow:hidden; }
+    .dist-bar { height:100%; background:linear-gradient(90deg,var(--zb-gold),var(--zb-gold2)); border-radius:3px; }
+    .status-badge { display:inline-block; padding:3px 10px; border-radius:999px; font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+    .st-pending    { background:rgba(201,162,39,.18); color:var(--zb-gold2); }
+    .st-confirmed  { background:rgba(61,158,106,.18); color:#3d9e6a; }
+    .st-preparing  { background:rgba(59,130,246,.18); color:#60a5fa; }
+    .st-ready      { background:rgba(168,85,247,.18); color:#c084fc; }
+    .st-delivered  { background:rgba(100,100,100,.18); color:#9ca3af; }
+    .st-cancelled  { background:rgba(201,62,62,.18); color:var(--zb-danger); }
+    .low-stock { color:var(--zb-danger)!important; }
+    .low-stock td { color:var(--zb-danger)!important; }
+  </style>
+</head>
+<body>
+
+  <!-- LOGIN -->
+  <div id="login">
+    <div class="zb-card" style="max-width:380px;width:100%;padding:32px;">
+      <h2 class="zb-logo" style="text-align:center;">Admin</h2>
+      <p class="text-muted" style="margin:8px 0 22px;font-size:.85rem;text-align:center;">Panel de control · Zona Break</p>
+      <input class="zb-input" id="lu" placeholder="Usuario" value="admin" style="margin-bottom:10px;" />
+      <input class="zb-input" id="lp" type="password" placeholder="Contraseña" />
+      <button type="button" class="zb-btn zb-btn-primary" style="width:100%;margin-top:18px;font-size:1rem;" id="btnLogin">Entrar</button>
+      <p style="margin-top:14px;font-size:.78rem;text-align:center;">
+        <a href="/pos.html">← POS</a> · <a href="/">Menú público</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- APP ADMIN -->
+  <div id="app" style="display:none;">
+    <header class="zb-header">
+      <span class="zb-logo" style="font-size:1.2rem;">Admin · Zona Break</span>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <a href="/pos.html" class="zb-btn zb-btn-ghost" style="padding:7px 13px;font-size:.72rem;">POS</a>
+        <a href="/"         class="zb-btn zb-btn-ghost" style="padding:7px 13px;font-size:.72rem;">Menú</a>
+        <button type="button" class="zb-btn zb-btn-ghost" style="padding:7px 13px;font-size:.72rem;" id="btnOut">Salir</button>
+      </div>
+    </header>
+
+    <nav class="tabs" id="tabs"></nav>
+
+    <!-- ── DASHBOARD ──────────────────────────────────────── -->
+    <section class="panel on" data-panel="dashboard">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+        <h2 class="section-h" style="margin:0;">Dashboard</h2>
+        <div style="display:flex;gap:6px;">
+          <button class="period-btn on" data-dash="day">Hoy</button>
+          <button class="period-btn" data-dash="week">Semana</button>
+          <button class="period-btn" data-dash="month">Mes</button>
+        </div>
+      </div>
+      <div class="stat-grid" id="dashStats"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;" id="dashGrids">
+        <div class="zb-card">
+          <p style="font-family:var(--font-display);color:var(--zb-gold2);font-size:.85rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px;">Últimos pedidos</p>
+          <div id="dashRecentOrders"></div>
+        </div>
+        <div class="zb-card">
+          <p style="font-family:var(--font-display);color:var(--zb-gold2);font-size:.85rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px;">Stock bajo mínimo ⚠️</p>
+          <div id="dashLowStock"></div>
+        </div>
+      </div>
+      <div class="zb-card" style="margin-top:14px;">
+        <p style="font-family:var(--font-display);color:var(--zb-gold2);font-size:.85rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px;">Distribución de utilidades</p>
+        <div id="dashPartners"></div>
+      </div>
+    </section>
+
+    <!-- ── PEDIDOS ──────────────────────────────────────── -->
+    <section class="panel" data-panel="orders">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+        <h2 class="section-h" style="margin:0;">Pedidos</h2>
+        <div id="liveDot" class="zb-badge">Socket: conectando…</div>
+        <button type="button" class="zb-btn zb-btn-ghost" style="padding:6px 14px;font-size:.72rem;margin-left:auto;" id="btnRefOrders">↻ Actualizar</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr>
+            <th>Código</th><th>Fecha/Hora</th><th>Cliente</th><th>Canal</th>
+            <th>Total</th><th>Pago</th><th>Estado</th>
+          </tr></thead>
+          <tbody id="tbOrders"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── PRODUCTOS ──────────────────────────────────────── -->
+    <section class="panel" data-panel="products">
+      <h2 class="section-h">Productos</h2>
+      <div class="zb-card" style="margin-bottom:16px;">
+        <p class="text-muted" style="font-size:.78rem;margin-bottom:12px;">Agregar nuevo producto</p>
+        <div style="display:grid;gap:8px;grid-template-columns:1fr 1fr;">
+          <input class="zb-input" id="npName" placeholder="Nombre del producto" />
+          <input class="zb-input" id="npPrice" type="number" placeholder="Precio ($)" />
+        </div>
+        <div style="display:grid;gap:8px;grid-template-columns:1fr 1fr;margin-top:8px;">
+          <input class="zb-input" id="npCat" placeholder="Categoría (hamburguesas, sandwiches, picadas, asados, bebidas…)" />
+          <input class="zb-input" id="npEmoji" placeholder="Emoji (ej: 🍔)" />
+        </div>
+        <input class="zb-input" id="npDesc" placeholder="Descripción (opcional)" style="margin-top:8px;" />
+        <button type="button" class="zb-btn zb-btn-primary" style="margin-top:10px;" id="btnAddP">Crear producto</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Estado</th><th></th></tr></thead>
+          <tbody id="tbProducts"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── INVENTARIO ─────────────────────────────────────── -->
+    <section class="panel" data-panel="inventory">
+      <h2 class="section-h">Inventario</h2>
+      <p class="text-muted" style="font-size:.84rem;margin-bottom:16px;">
+        Las filas en <span style="color:var(--zb-danger);">rojo</span> tienen stock por debajo del mínimo.
+        Al vender en el POS se descuenta automáticamente.
+      </p>
+      <div class="zb-card" style="margin-bottom:14px;">
+        <p class="text-muted" style="font-size:.78rem;margin-bottom:10px;">Agregar ingrediente al inventario</p>
+        <div style="display:grid;gap:8px;grid-template-columns:1fr 1fr;">
+          <input class="zb-input" id="invKey" placeholder="Código único (ej: salsa_bbq)" />
+          <input class="zb-input" id="invName" placeholder="Nombre visible" />
+        </div>
+        <div style="display:grid;gap:8px;grid-template-columns:repeat(4,1fr);margin-top:8px;">
+          <input class="zb-input" id="invUnit" placeholder="Unidad (kg)" />
+          <input class="zb-input" id="invStock" type="number" placeholder="Stock" />
+          <input class="zb-input" id="invMin" type="number" placeholder="Mín. alerta" />
+          <input class="zb-input" id="invCost" type="number" placeholder="Costo/u" />
+        </div>
+        <button type="button" class="zb-btn zb-btn-primary" style="margin-top:10px;" id="btnInvAdd">Crear ingrediente</button>
+      </div>
+      <div class="zb-card" style="margin-bottom:14px;">
+        <p class="text-muted" style="font-size:.78rem;margin-bottom:8px;">📉 Registrar merma (pérdida / desperdicio)</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+          <select class="zb-select" id="mermaKey" style="min-width:200px;"></select>
+          <input class="zb-input" id="mermaAmt" type="number" placeholder="Cantidad" style="max-width:120px;" />
+          <button type="button" class="zb-btn zb-btn-ghost" id="btnMerma">Registrar merma</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr><th>Ingrediente</th><th>Stock actual</th><th>Mínimo</th><th>Unidad</th><th>Costo/u</th><th>Acción</th></tr></thead>
+          <tbody id="tbInv"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── RECETAS ────────────────────────────────────────── -->
+    <section class="panel" data-panel="recipes">
+      <h2 class="section-h">Recetas — Costos y Márgenes</h2>
+      <p class="text-muted" style="font-size:.84rem;margin-bottom:16px;">
+        Muestra el costo de ingredientes por plato calculado desde el inventario, y el margen bruto de cada producto.
+      </p>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr>
+            <th>Producto</th><th>Categoría</th><th>Precio venta</th>
+            <th>Costo ingredientes</th><th>Ganancia bruta</th><th>Margen</th><th></th>
+          </tr></thead>
+          <tbody id="tbRecipes"></tbody>
+        </table>
+      </div>
+      <!-- Detalle expandido -->
+      <div id="recipeDetail" style="display:none;margin-top:20px;" class="zb-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <h3 id="recipeDetailTitle" style="font-family:var(--font-display);color:var(--zb-gold2);font-size:1.1rem;margin:0;"></h3>
+          <button type="button" class="zb-btn zb-btn-ghost" style="padding:4px 12px;font-size:.72rem;" id="btnCloseRecipe">✕ Cerrar</button>
+        </div>
+        <table>
+          <thead><tr><th>Ingrediente</th><th>Cantidad</th><th>Unidad</th><th>Costo/u</th><th>Subtotal</th><th>Stock actual</th></tr></thead>
+          <tbody id="tbRecipeDetail"></tbody>
+        </table>
+        <div id="recipeDetailTotals" style="margin-top:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;"></div>
+      </div>
+    </section>
+
+    <!-- ── SOCIOS ──────────────────────────────────────────── -->
+    <section class="panel" data-panel="partners">
+      <h2 class="section-h">Socios — Reparto de Utilidades</h2>
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+        <button class="period-btn on" data-per="day">Hoy</button>
+        <button class="period-btn" data-per="week">Semana</button>
+        <button class="period-btn" data-per="month">Mes</button>
+      </div>
+      <p class="text-muted" style="font-size:.82rem;margin-bottom:14px;">
+        La suma de porcentajes debe ser exactamente <strong>100%</strong>.
+      </p>
+      <div id="partnersEdit"></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;">
+        <button type="button" class="zb-btn zb-btn-ghost" id="btnAddPartner">+ Agregar socio</button>
+        <button type="button" class="zb-btn zb-btn-primary" id="btnSavePartners">Guardar cambios</button>
+      </div>
+      <h3 style="margin:24px 0 14px;font-family:var(--font-display);color:var(--zb-gold2);font-size:1.1rem;">
+        Distribución de utilidades
+      </h3>
+      <div id="partnerStats" class="zb-card"></div>
+      <div id="partnersDist" style="margin-top:12px;display:grid;gap:8px;"></div>
+    </section>
+
+    <!-- ── DELIVERY ───────────────────────────────────────── -->
+    <section class="panel" data-panel="delivery">
+      <h2 class="section-h">Delivery</h2>
+      <div class="zb-card" style="margin-bottom:16px;">
+        <p class="text-muted" style="font-size:.78rem;margin-bottom:10px;">Agregar domiciliario</p>
+        <div style="display:grid;gap:8px;grid-template-columns:1fr 1fr;">
+          <input class="zb-input" id="dpName" placeholder="Nombre del domiciliario" />
+          <input class="zb-input" id="dpPhone" placeholder="Teléfono / WhatsApp" />
+        </div>
+        <button type="button" class="zb-btn zb-btn-primary" style="margin-top:10px;" id="btnAddDp">Agregar repartidor</button>
+      </div>
+      <h3 style="font-family:var(--font-display);color:var(--zb-gold2);margin-bottom:10px;font-size:1rem;">Domiciliarios registrados</h3>
+      <table style="margin-bottom:20px;">
+        <thead><tr><th>Nombre</th><th>Teléfono</th><th></th></tr></thead>
+        <tbody id="tbDp"></tbody>
+      </table>
+      <h3 style="font-family:var(--font-display);color:var(--zb-gold2);margin-bottom:10px;font-size:1rem;">Estadísticas (mes)</h3>
+      <div class="stat-grid" id="delStats"></div>
+      <div id="delPersonStats"></div>
+    </section>
+
+    <!-- ── CONTABILIDAD ────────────────────────────────────── -->
+    <section class="panel" data-panel="accounting">
+      <h2 class="section-h">Contabilidad</h2>
+      <div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;">
+        <button class="period-btn on" data-per2="day">Hoy</button>
+        <button class="period-btn" data-per2="week">Semana</button>
+        <button class="period-btn" data-per2="month">Mes</button>
+      </div>
+      <div class="stat-grid" id="accStats"></div>
+      <div class="zb-card" style="margin-bottom:16px;">
+        <p class="text-muted" style="font-size:.78rem;margin-bottom:10px;">Registrar gasto</p>
+        <div style="display:grid;gap:8px;grid-template-columns:1fr 1fr;">
+          <input class="zb-input" id="exDesc" placeholder="Descripción del gasto" />
+          <input class="zb-input" id="exAmount" type="number" placeholder="Monto ($)" />
+        </div>
+        <div style="display:grid;gap:8px;grid-template-columns:1fr 1fr;margin-top:8px;">
+          <select class="zb-select" id="exCat">
+            <option value="insumos">Insumos / materias primas</option>
+            <option value="nomina">Nómina</option>
+            <option value="servicios">Servicios públicos</option>
+            <option value="arriendo">Arriendo</option>
+            <option value="marketing">Marketing</option>
+            <option value="otro">Otro</option>
+          </select>
+          <select class="zb-select" id="exPay">
+            <option>Efectivo</option><option>Transferencia</option><option>Tarjeta</option>
+          </select>
+        </div>
+        <button type="button" class="zb-btn zb-btn-primary" style="margin-top:10px;" id="btnEx">Registrar gasto</button>
+      </div>
+      <h3 style="font-family:var(--font-display);color:var(--zb-gold2);margin-bottom:10px;font-size:1rem;">Últimos gastos</h3>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr><th>Fecha</th><th>Descripción</th><th>Categoría</th><th>Pago</th><th>Monto</th></tr></thead>
+          <tbody id="tbEx"></tbody>
+        </table>
+      </div>
+    </section>
+  </div><!-- /app -->
+
+  <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+  <script src="/assets/js/api.js"></script>
+  <script src="/components/toast.js"></script>
+  <script>
+    const TAB_DEF = [
+      {id:'dashboard',  label:'📊 Dashboard'},
+      {id:'orders',     label:'📋 Pedidos'},
+      {id:'products',   label:'🍔 Productos'},
+      {id:'inventory',  label:'📦 Inventario'},
+      {id:'recipes',    label:'📖 Recetas'},
+      {id:'partners',   label:'🤝 Socios'},
+      {id:'delivery',   label:'🛵 Delivery'},
+      {id:'accounting', label:'💰 Contabilidad'},
+    ];
+    const ORDER_STATUSES = ['pending','confirmed','preparing','ready','delivered','cancelled'];
+    const ST_LABEL = {pending:'Pendiente',confirmed:'Confirmado',preparing:'En cocina',ready:'Listo',delivered:'Entregado',cancelled:'Cancelado'};
+    const CAT_EX_LABEL = {insumos:'Insumos',nomina:'Nómina',servicios:'Servicios',arriendo:'Arriendo',marketing:'Marketing',otro:'Otro'};
+
+    const fmt = n => '$'+Math.round(n).toLocaleString('es-CO');
+    let partnerPeriod = 'day';
+    let accPeriod = 'day';
+
+    function showPanel(id) {
+      document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('on',p.dataset.panel===id));
+      document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.tab===id));
+    }
+
+    // ── PEDIDOS ────────────────────────────────────────────
+    async function loadOrders() {
+      const rows = await ZB.get('/api/orders?limit=100');
+      document.getElementById('tbOrders').innerHTML = rows.length ? rows.map(o=>`
+        <tr>
+          <td><code style="font-size:.75rem;">${o.code}</code></td>
+          <td style="font-size:.78rem;">${new Date(o.createdAt).toLocaleString('es-CO')}</td>
+          <td>${o.customerName||'—'}</td>
+          <td>${o.channel}</td>
+          <td class="text-gold">${fmt(o.total)}</td>
+          <td style="font-size:.8rem;">${o.paymentMethod||'—'}</td>
+          <td>
+            <select class="zb-select order-st" data-id="${o._id}" style="max-width:140px;font-size:.72rem;padding:4px 8px;">
+              ${ORDER_STATUSES.map(s=>`<option value="${s}" ${o.status===s?'selected':''}>${ST_LABEL[s]||s}</option>`).join('')}
+            </select>
+          </td>
+        </tr>`).join('')
+        : '<tr><td colspan="7" class="text-muted" style="text-align:center;padding:24px;">Sin pedidos aún</td></tr>';
+    }
+
+    // ── PRODUCTOS ──────────────────────────────────────────
+    async function loadProducts() {
+      const rows = await ZB.get('/api/products/all');
+      document.getElementById('tbProducts').innerHTML = rows.map(p=>`
+        <tr>
+          <td>${p.emoji||'🍽️'} ${p.name}</td>
+          <td><span class="zb-badge">${p.category}</span></td>
+          <td class="text-gold">${fmt(p.price)}</td>
+          <td>${p.active?'<span style="color:var(--zb-success);">● Activo</span>':'<span style="color:var(--zb-muted);">● Inactivo</span>'}</td>
+          <td>${p.active?`<button type="button" class="zb-btn zb-btn-ghost" style="padding:4px 10px;font-size:.7rem;" data-del-p="${p._id}">Desactivar</button>`:'—'}</td>
+        </tr>`).join('');
+    }
+
+    // ── INVENTARIO ─────────────────────────────────────────
+    async function loadInv() {
+      const rows = await ZB.get('/api/inventory');
+      const mk = document.getElementById('mermaKey');
+      mk.innerHTML = rows.length
+        ? rows.map(i=>`<option value="${i.key}">${i.name} (${i.key})</option>`).join('')
+        : '<option>— Sin ítems —</option>';
+      document.getElementById('tbInv').innerHTML = rows.map(i=>{
+        const low = i.stock < i.minStock;
+        return `<tr class="${low?'low-stock':''}">
+          <td>${i.name}<br/><span class="text-muted" style="font-size:.68rem;">${i.key}</span></td>
+          <td><input class="zb-input inv-stock" data-id="${i._id}" type="number" step="any" value="${+(i.stock).toFixed(3)}" style="max-width:110px;padding:6px 8px;${low?'border-color:var(--zb-danger);':''}" /></td>
+          <td><input class="zb-input inv-min"   data-id="${i._id}" type="number" step="any" value="${i.minStock}" style="max-width:90px;padding:6px 8px;" /></td>
+          <td>${i.unit}</td>
+          <td><input class="zb-input inv-cost"  data-id="${i._id}" type="number" step="any" value="${i.costPerUnit||0}" style="max-width:110px;padding:6px 8px;" /></td>
+          <td><button type="button" class="zb-btn zb-btn-ghost" style="padding:6px 12px;font-size:.72rem;" data-save-inv="${i._id}">Guardar</button></td>
+        </tr>`;}).join('')
+        || '<tr><td colspan="6" class="text-muted" style="text-align:center;padding:24px;">Sin inventario. Ejecuta npm run seed</td></tr>';
+    }
+
+    // ── SOCIOS ─────────────────────────────────────────────
+    async function loadPartners() {
+      const [rows, dist] = await Promise.all([
+        ZB.get('/api/partners'),
+        ZB.get('/api/reports/partners?period='+partnerPeriod),
+      ]);
+      document.getElementById('partnersEdit').innerHTML = rows.map(p=>`
+        <div class="partner-row">
+          <input class="zb-input pn" data-id="${p._id}" value="${p.name}" placeholder="Nombre" />
+          <input class="zb-input pp" data-id="${p._id}" type="number" value="${p.percentage}" style="max-width:90px;" min="0" max="100" /> %
+        </div>`).join('');
+
+      document.getElementById('partnerStats').innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+          <div><div class="stat-val">${fmt(dist.income)}</div><div class="stat-label">Ingresos</div></div>
+          <div><div class="stat-val">${fmt(dist.expenses)}</div><div class="stat-label">Gastos</div></div>
+          <div><div class="stat-val" style="${dist.net<0?'color:var(--zb-danger)':''}">${fmt(dist.net)}</div><div class="stat-label">Utilidad neta</div></div>
+        </div>`;
+
+      document.getElementById('partnersDist').innerHTML = dist.distribution.map(d=>`
+        <div class="partner-dist">
+          <div>
+            <div style="font-weight:600;">${d.name}</div>
+            <div class="text-muted" style="font-size:.78rem;">${d.percentage}% de participación</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="dist-bar-wrap"><div class="dist-bar" style="width:${d.percentage}%;"></div></div>
+            <div class="stat-val" style="font-size:1.3rem;">${fmt(d.amount)}</div>
+          </div>
+        </div>`).join('');
+    }
+
+    // ── DELIVERY ───────────────────────────────────────────
+    async function loadDel() {
+      const [persons, stats] = await Promise.all([
+        ZB.get('/api/delivery/persons'),
+        ZB.get('/api/delivery/stats?period=month'),
+      ]);
+      document.getElementById('tbDp').innerHTML = persons.length
+        ? persons.map(p=>`
+          <tr>
+            <td>${p.name}</td>
+            <td>${p.phone||'—'}</td>
+            <td><button type="button" class="zb-btn zb-btn-ghost" style="padding:4px 10px;font-size:.7rem;" data-del-dp="${p._id}">Eliminar</button></td>
+          </tr>`).join('')
+        : '<tr><td colspan="3" class="text-muted" style="padding:16px;">Sin repartidores</td></tr>';
+
+      const byChannel = stats.byChannel||{};
+      const channelLabels = {local:'🏠 Local',rappi:'🛵 Rappi',domicilio_interno:'🏍️ Domicilio',menu_web:'📱 Web'};
+      document.getElementById('delStats').innerHTML = Object.entries(byChannel).map(([k,v])=>`
+        <div class="stat-card">
+          <div class="stat-val">${fmt(v)}</div>
+          <div class="stat-label">${channelLabels[k]||k}</div>
+        </div>`).join('') || '<p class="text-muted">Sin ventas este mes</p>';
+
+      document.getElementById('delPersonStats').innerHTML = stats.byPerson.length
+        ? '<h3 style="font-family:var(--font-display);color:var(--zb-gold2);font-size:1rem;margin:14px 0 10px;">Ventas por domiciliario</h3>'+
+          '<table><thead><tr><th>Domiciliario</th><th>Total entregado</th></tr></thead><tbody>'+
+          stats.byPerson.map(p=>`<tr><td>${p.name}</td><td class="text-gold">${fmt(p.total)}</td></tr>`).join('')+
+          '</tbody></table>'
+        : '';
+    }
+
+    // ── RECETAS ────────────────────────────────────────────
+    async function loadRecipes() {
+      const rows = await ZB.get('/api/recipes');
+      document.getElementById('recipeDetail').style.display = 'none';
+      document.getElementById('tbRecipes').innerHTML = rows.length
+        ? rows.map(r => {
+            const marginColor = r.margin >= 50 ? 'var(--zb-success)' : r.margin >= 30 ? 'var(--zb-gold2)' : 'var(--zb-danger)';
+            return `<tr>
+              <td>${r.emoji||'🍽️'} ${r.name}</td>
+              <td><span class="zb-badge">${r.category}</span></td>
+              <td class="text-gold">${fmt(r.price)}</td>
+              <td>${fmt(r.totalCost)}</td>
+              <td style="color:var(--zb-success);">${fmt(r.grossProfit)}</td>
+              <td style="color:${marginColor};font-weight:700;">${r.margin}%</td>
+              <td><button type="button" class="zb-btn zb-btn-ghost" style="padding:4px 10px;font-size:.7rem;" data-recipe-id="${r._id}">Ver detalle</button></td>
+            </tr>`;
+          }).join('')
+        : '<tr><td colspan="7" class="text-muted" style="text-align:center;padding:24px;">Sin productos con recetas. Verifica el seed.</td></tr>';
+
+      // Click en "Ver detalle"
+      document.getElementById('tbRecipes').onclick = async (e) => {
+        const btn = e.target.closest('[data-recipe-id]');
+        if (!btn) return;
+        try {
+          const r = await ZB.get('/api/recipes/' + btn.dataset.recipeId);
+          document.getElementById('recipeDetailTitle').textContent = r.emoji + ' ' + r.name;
+          document.getElementById('tbRecipeDetail').innerHTML = r.ingredients.map(i => {
+            const low = i.currentStock !== null && i.currentStock < 1;
+            return `<tr>
+              <td>${i.name}</td>
+              <td>${i.amount}</td>
+              <td>${i.unit}</td>
+              <td>${fmt(i.costPerUnit)}</td>
+              <td>${fmt(i.lineCost)}</td>
+              <td style="${low?'color:var(--zb-danger);font-weight:700;':''}">${i.currentStock !== null ? +(i.currentStock).toFixed(2) : '—'}</td>
+            </tr>`;
+          }).join('');
+          const marginColor = r.margin >= 50 ? 'var(--zb-success)' : r.margin >= 30 ? 'var(--zb-gold2)' : 'var(--zb-danger)';
+          document.getElementById('recipeDetailTotals').innerHTML = `
+            <div class="stat-card"><div class="stat-val">${fmt(r.price)}</div><div class="stat-label">Precio de venta</div></div>
+            <div class="stat-card"><div class="stat-val">${fmt(r.totalCost)}</div><div class="stat-label">Costo ingredientes</div></div>
+            <div class="stat-card" style="border-color:rgba(201,162,39,.4);">
+              <div class="stat-val" style="color:${marginColor};">${r.margin}%</div>
+              <div class="stat-label">Margen bruto (${fmt(r.grossProfit)})</div>
+            </div>`;
+          document.getElementById('recipeDetail').style.display = 'block';
+          document.getElementById('recipeDetail').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } catch(err) { showToast(err.message || 'Error', 'err'); }
+      };
+    }
+
+    // ── DASHBOARD ──────────────────────────────────────────
+    let dashPeriod = 'day';
+
+    async function loadDashboard() {
+      const [sales, inv, orders, partnerDist] = await Promise.all([
+        ZB.get('/api/reports/sales?period=' + dashPeriod),
+        ZB.get('/api/inventory'),
+        ZB.get('/api/orders?limit=5'),
+        ZB.get('/api/reports/partners?period=' + dashPeriod),
+      ]);
+
+      const net = sales.income - sales.expenses;
+      document.getElementById('dashStats').innerHTML = `
+        <div class="stat-card">
+          <div class="stat-val">${sales.orderCount}</div>
+          <div class="stat-label">Pedidos</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val">${fmt(sales.income)}</div>
+          <div class="stat-label">Ingresos brutos</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val">${fmt(sales.expenses)}</div>
+          <div class="stat-label">Gastos</div>
+        </div>
+        <div class="stat-card" style="border-color:rgba(201,162,39,.4);">
+          <div class="stat-val" style="${net<0?'color:var(--zb-danger)':''}">${fmt(net)}</div>
+          <div class="stat-label">Utilidad neta</div>
+        </div>`;
+
+      // Últimos pedidos
+      document.getElementById('dashRecentOrders').innerHTML = orders.length
+        ? orders.map(o=>`
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);">
+            <div>
+              <div style="font-size:.82rem;font-weight:600;">${o.customerName||'Cliente'}</div>
+              <div style="font-size:.7rem;color:var(--zb-muted);">${new Date(o.createdAt).toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'})}</div>
+            </div>
+            <div style="text-align:right;">
+              <div class="text-gold" style="font-family:var(--font-display);font-weight:700;">${fmt(o.total)}</div>
+              <span class="status-badge st-${o.status}">${ST_LABEL[o.status]||o.status}</span>
+            </div>
+          </div>`).join('')
+        : '<p class="text-muted" style="font-size:.82rem;">Sin pedidos en este período</p>';
+
+      // Stock bajo
+      const lowStock = inv.filter(i => i.stock < i.minStock);
+      document.getElementById('dashLowStock').innerHTML = lowStock.length
+        ? lowStock.map(i=>`
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);">
+            <div style="font-size:.82rem;">${i.name}</div>
+            <div style="font-size:.82rem;color:var(--zb-danger);font-weight:700;">
+              ${+(i.stock).toFixed(2)} / ${i.minStock} ${i.unit}
+            </div>
+          </div>`).join('')
+        : '<p style="color:var(--zb-success);font-size:.82rem;">✅ Todo el stock en buen nivel</p>';
+
+      // Distribución socios
+      document.getElementById('dashPartners').innerHTML = partnerDist.distribution.length
+        ? partnerDist.distribution.map(d=>`
+          <div class="partner-dist">
+            <div>
+              <div style="font-weight:600;">${d.name}</div>
+              <div class="text-muted" style="font-size:.78rem;">${d.percentage}%</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div class="dist-bar-wrap"><div class="dist-bar" style="width:${d.percentage}%;"></div></div>
+              <div class="stat-val" style="font-size:1.2rem;">${fmt(d.amount)}</div>
+            </div>
+          </div>`).join('')
+        : '<p class="text-muted" style="font-size:.82rem;">Sin socios configurados</p>';
+    }
+
+    // ── CONTABILIDAD ───────────────────────────────────────
+    async function loadAcc() {
+      const [r, ex] = await Promise.all([
+        ZB.get('/api/reports/sales?period='+accPeriod),
+        ZB.get('/api/expenses'),
+      ]);
+      const net = r.income - r.expenses;
+      document.getElementById('accStats').innerHTML = `
+        <div class="stat-card"><div class="stat-val">${r.orderCount}</div><div class="stat-label">Pedidos</div></div>
+        <div class="stat-card"><div class="stat-val">${fmt(r.income)}</div><div class="stat-label">Ingresos brutos</div></div>
+        <div class="stat-card"><div class="stat-val">${fmt(r.estimatedCost||0)}</div><div class="stat-label">Costo de ventas</div></div>
+        <div class="stat-card"><div class="stat-val">${fmt(r.expenses)}</div><div class="stat-label">Gastos registrados</div></div>
+        <div class="stat-card" style="border-color:rgba(201,162,39,.4);">
+          <div class="stat-val" style="${net<0?'color:var(--zb-danger)':''}">${fmt(net)}</div>
+          <div class="stat-label">Utilidad neta</div>
+        </div>`;
+
+      document.getElementById('tbEx').innerHTML = ex.slice(0,50).map(e=>`
+        <tr>
+          <td style="font-size:.8rem;">${new Date(e.date).toLocaleDateString('es-CO')}</td>
+          <td>${e.description}</td>
+          <td><span class="zb-badge">${CAT_EX_LABEL[e.category]||e.category||'—'}</span></td>
+          <td>${e.paymentMethod||'—'}</td>
+          <td class="text-gold">${fmt(e.amount)}</td>
+        </tr>`).join('')
+        || '<tr><td colspan="5" class="text-muted" style="text-align:center;padding:16px;">Sin gastos registrados</td></tr>';
+    }
+
+    // ── DELEGADOS DE EVENTOS ───────────────────────────────
+    function boot() {
+      // Tabs
+      document.getElementById('tabs').innerHTML =
+        TAB_DEF.map(t=>`<button type="button" data-tab="${t.id}">${t.label}</button>`).join('');
+      document.getElementById('tabs').onclick = (e) => {
+        const b = e.target.closest('button[data-tab]');
+        if (!b) return;
+        showPanel(b.dataset.tab);
+        const loaders = {dashboard:loadDashboard,orders:loadOrders,products:loadProducts,inventory:loadInv,recipes:loadRecipes,partners:loadPartners,delivery:loadDel,accounting:loadAcc};
+        if (loaders[b.dataset.tab]) loaders[b.dataset.tab]();
+      };
+
+      // Socket
+      const socket = io({transports:['websocket','polling']});
+      socket.on('connect', ()=>{ document.getElementById('liveDot').textContent='🟢 Tiempo real'; });
+      socket.on('disconnect',()=>{ document.getElementById('liveDot').textContent='🔴 Desconectado'; });
+      socket.on('order:new', ()=>{ loadOrders(); showToast('🔔 Nuevo pedido'); });
+      socket.on('order:update', ()=>{ loadOrders(); });
+
+      // Cambio estado pedido
+      document.getElementById('app').addEventListener('change', async (e) => {
+        const sel = e.target.closest('.order-st');
+        if (!sel) return;
+        try {
+          await ZB.patch('/api/orders/'+sel.dataset.id+'/status', {status:sel.value});
+          showToast('Estado actualizado');
+        } catch(err) { showToast(err.message||'Error','err'); loadOrders(); }
+      });
+
+      // Delegado de clicks
+      document.getElementById('app').addEventListener('click', async (e) => {
+        // Guardar inventario
+        const saveInv = e.target.getAttribute('data-save-inv');
+        if (saveInv) {
+          try {
+            await ZB.put('/api/inventory/'+saveInv, {
+              stock:     Number(document.querySelector('.inv-stock[data-id="'+saveInv+'"]').value),
+              minStock:  Number(document.querySelector('.inv-min[data-id="'+saveInv+'"]').value),
+              costPerUnit: Number(document.querySelector('.inv-cost[data-id="'+saveInv+'"]').value),
+            });
+            showToast('Inventario guardado'); loadInv();
+          } catch(err) { showToast(err.message||'Error','err'); }
+          return;
+        }
+        // Desactivar producto
+        const delP = e.target.getAttribute('data-del-p');
+        if (delP) {
+          if (!confirm('¿Desactivar este producto del menú y POS?')) return;
+          try { await ZB.delete('/api/products/'+delP); showToast('Desactivado'); loadProducts(); }
+          catch(err) { showToast(err.message||'Error','err'); }
+          return;
+        }
+        // Eliminar domiciliario
+        const delDp = e.target.getAttribute('data-del-dp');
+        if (delDp) {
+          if (!confirm('¿Eliminar este repartidor?')) return;
+          try { await ZB.delete('/api/delivery/persons/'+delDp); showToast('Eliminado'); loadDel(); }
+          catch(err) { showToast(err.message||'Error','err'); }
+        }
+      });
+
+      // Período dashboard
+      document.querySelectorAll('.period-btn[data-dash]').forEach(b=>{
+        b.onclick = () => {
+          dashPeriod = b.dataset.dash;
+          document.querySelectorAll('.period-btn[data-dash]').forEach(x=>x.classList.toggle('on',x===b));
+          loadDashboard();
+        };
+      });
+
+      // Período socios
+      document.querySelectorAll('.period-btn[data-per]').forEach(b=>{
+        b.onclick = () => {
+          partnerPeriod = b.dataset.per;
+          document.querySelectorAll('.period-btn[data-per]').forEach(x=>x.classList.toggle('on',x===b));
+          loadPartners();
+        };
+      });
+
+      // Período contabilidad
+      document.querySelectorAll('.period-btn[data-per2]').forEach(b=>{
+        b.onclick = () => {
+          accPeriod = b.dataset.per2;
+          document.querySelectorAll('.period-btn[data-per2]').forEach(x=>x.classList.toggle('on',x===b));
+          loadAcc();
+        };
+      });
+
+      // Botones fijos
+      document.getElementById('btnRefOrders').onclick = loadOrders;
+      document.getElementById('btnCloseRecipe').onclick = () => {
+        document.getElementById('recipeDetail').style.display = 'none';
+      };
+
+      document.getElementById('btnAddP').onclick = async () => {
+        const name = document.getElementById('npName').value.trim();
+        const price = Number(document.getElementById('npPrice').value);
+        if (!name || !price) { showToast('Nombre y precio requeridos','err'); return; }
+        try {
+          await ZB.post('/api/products', {
+            name, price,
+            category: document.getElementById('npCat').value||'general',
+            emoji:    document.getElementById('npEmoji').value||'🍽️',
+            description: document.getElementById('npDesc').value||'',
+          });
+          showToast('Producto creado');
+          ['npName','npPrice','npCat','npEmoji','npDesc'].forEach(id=>{ const el=document.getElementById(id); if(el)el.value=''; });
+          loadProducts();
+        } catch(err) { showToast(err.message||'Error','err'); }
+      };
+
+      document.getElementById('btnInvAdd').onclick = async () => {
+        try {
+          await ZB.post('/api/inventory', {
+            key: document.getElementById('invKey').value,
+            name: document.getElementById('invName').value,
+            unit: document.getElementById('invUnit').value||'kg',
+            stock: Number(document.getElementById('invStock').value)||0,
+            minStock: Number(document.getElementById('invMin').value)||0,
+            costPerUnit: Number(document.getElementById('invCost').value)||0,
+          });
+          showToast('Ingrediente creado');
+          ['invKey','invName','invUnit','invStock','invMin','invCost'].forEach(id=>{ const el=document.getElementById(id); if(el)el.value=''; });
+          loadInv();
+        } catch(err) { showToast(err.message||'Error','err'); }
+      };
+
+      document.getElementById('btnMerma').onclick = async () => {
+        const key = document.getElementById('mermaKey').value;
+        const amount = Number(document.getElementById('mermaAmt').value);
+        if (!key || amount<=0) { showToast('Selecciona ítem y cantidad','err'); return; }
+        try {
+          await ZB.post('/api/inventory/adjust', {key, op:'sub', amount});
+          showToast('Merma registrada');
+          document.getElementById('mermaAmt').value='';
+          loadInv();
+        } catch(err) { showToast(err.message||'Error','err'); }
+      };
+
+      document.getElementById('btnAddPartner').onclick = () => {
+        document.getElementById('partnersEdit').insertAdjacentHTML('beforeend',`
+          <div class="partner-row">
+            <input class="zb-input pn" value="" placeholder="Nombre del socio" />
+            <input class="zb-input pp" type="number" value="0" style="max-width:90px;" min="0" max="100" /> %
+          </div>`);
+      };
+
+      document.getElementById('btnSavePartners').onclick = async () => {
+        const names = [...document.querySelectorAll('.pn')];
+        const pcts  = [...document.querySelectorAll('.pp')];
+        const arr = names.map((inp,i)=>({name:inp.value.trim(),percentage:Number(pcts[i].value)}));
+        const sum = arr.reduce((s,p)=>s+p.percentage,0);
+        if (Math.abs(sum-100)>0.01) { showToast('Los porcentajes deben sumar 100% (actual: '+sum+'%)','err'); return; }
+        try {
+          await ZB.put('/api/partners', arr);
+          showToast('Socios guardados ✅');
+          loadPartners();
+        } catch(err) { showToast(err.message||'Error','err'); }
+      };
+
+      document.getElementById('btnAddDp').onclick = async () => {
+        const name = document.getElementById('dpName').value.trim();
+        if (!name) { showToast('Escribe el nombre','err'); return; }
+        try {
+          await ZB.post('/api/delivery/persons', {name, phone:document.getElementById('dpPhone').value});
+          showToast('Repartidor agregado');
+          document.getElementById('dpName').value='';
+          document.getElementById('dpPhone').value='';
+          loadDel();
+        } catch(err) { showToast(err.message||'Error','err'); }
+      };
+
+      document.getElementById('btnEx').onclick = async () => {
+        const desc = document.getElementById('exDesc').value.trim();
+        const amount = Number(document.getElementById('exAmount').value);
+        if (!desc || !amount) { showToast('Completa descripción y monto','err'); return; }
+        try {
+          await ZB.post('/api/expenses', {
+            description: desc,
+            amount,
+            category: document.getElementById('exCat').value,
+            paymentMethod: document.getElementById('exPay').value,
+          });
+          showToast('Gasto registrado');
+          document.getElementById('exDesc').value='';
+          document.getElementById('exAmount').value='';
+          loadAcc();
+        } catch(err) { showToast(err.message||'Error','err'); }
+      };
+
+      loadDashboard();
+    }
+
+    // ── LOGIN ─────────────────────────────────────────────
+    document.getElementById('btnLogin').onclick = async () => {
+      try {
+        const r = await fetch('/api/auth/login', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({username:document.getElementById('lu').value, password:document.getElementById('lp').value}),
+        });
+        const d = await r.json();
+        if (!r.ok) throw new Error(d.error);
+        if (d.user.role !== 'admin') throw new Error('Solo el administrador puede entrar aquí');
+        ZB.setToken(d.token);
+        document.getElementById('login').style.display='none';
+        document.getElementById('app').style.display='block';
+        boot();
+      } catch(e) { showToast(e.message||'Error','err'); }
+    };
+
+    document.getElementById('lp').addEventListener('keydown', e => {
+      if (e.key==='Enter') document.getElementById('btnLogin').click();
+    });
+
+    document.getElementById('btnOut').onclick = () => { ZB.setToken(null); location.reload(); };
+
+    // Auto-login
+    if (ZB.getToken()) {
+      fetch('/api/auth/me', {headers:{Authorization:'Bearer '+ZB.getToken()}})
+        .then(r=>r.json())
+        .then(d => {
+          if (d.user && d.user.role==='admin') {
+            document.getElementById('login').style.display='none';
+            document.getElementById('app').style.display='block';
+            boot();
+          }
+        })
+        .catch(()=>ZB.setToken(null));
+    }
+  </script>
+</body>
+</html>

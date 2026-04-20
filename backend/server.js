@@ -15,6 +15,7 @@ const inventoryRoutes = require('./routes/inventory');
 const expensesRoutes  = require('./routes/expenses');
 const reportsRoutes   = require('./routes/reports');
 const recipesRoutes   = require('./routes/recipes');
+const costeoRoutes    = require('./routes/costeo');
 
 const app    = express();
 const server = http.createServer(app);
@@ -22,11 +23,9 @@ const io     = new Server(server, { cors: { origin: '*' } });
 
 app.set('io', io);
 
-// ── MIDDLEWARE ──────────────────────────────────────────────
 app.use(cors({ origin: true }));
 app.use(express.json({ limit: '2mb' }));
 
-// ── API ROUTES ──────────────────────────────────────────────
 app.use('/api/auth',      authRoutes);
 app.use('/api/products',  productsRoutes);
 app.use('/api/orders',    ordersRoutes);
@@ -36,8 +35,8 @@ app.use('/api/inventory', inventoryRoutes);
 app.use('/api/expenses',  expensesRoutes);
 app.use('/api/reports',   reportsRoutes);
 app.use('/api/recipes',   recipesRoutes);
+app.use('/api/costeo',    costeoRoutes);
 
-// ── ENDPOINT PÚBLICO (WhatsApp config) ─────────────────────
 app.get('/api/public/config', (_req, res) => {
   res.json({
     whatsapp: {
@@ -49,49 +48,36 @@ app.get('/api/public/config', (_req, res) => {
   });
 });
 
-// ── ARCHIVOS ESTÁTICOS ──────────────────────────────────────
 const frontendDir = path.join(__dirname, '..', 'frontend');
 const rootDir     = path.join(__dirname, '..');
 app.use(express.static(frontendDir));
 app.use('/components', express.static(path.join(rootDir, 'components')));
 
-// ── FALLBACK: SPA (para rutas sin extensión) ────────────────
 app.get('*', (req, res) => {
-  // Solo para rutas sin extensión que no son API
   if (!req.path.includes('.') && !req.path.startsWith('/api')) {
     return res.sendFile(path.join(frontendDir, 'index.html'));
   }
   res.status(404).json({ error: 'Not found' });
 });
 
-// ── MANEJO GLOBAL DE ERRORES ────────────────────────────────
 app.use((err, _req, res, _next) => {
-  console.error('❌ Error no manejado:', err.message);
+  console.error('❌ Error:', err.message);
   res.status(500).json({ error: 'Error interno del servidor' });
 });
 
-// ── ARRANQUE ────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 
 connectDb()
   .then(() => {
     server.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 ZONA BREAK → http://localhost:${PORT}`);
-      console.log(`   Admin → http://localhost:${PORT}/admin.html`);
-      console.log(`   POS   → http://localhost:${PORT}/pos.html`);
     });
   })
   .catch((e) => {
     console.error('❌ No se pudo conectar a MongoDB:', e.message);
-    console.error('   Verifica que MONGODB_URI esté configurada correctamente.');
     process.exit(1);
   });
 
-// ── CIERRE LIMPIO ───────────────────────────────────────────
 process.on('SIGTERM', () => {
-  console.log('🔄 Cerrando servidor...');
-  server.close(() => {
-    console.log('✅ Servidor cerrado limpiamente');
-    process.exit(0);
-  });
+  server.close(() => process.exit(0));
 });

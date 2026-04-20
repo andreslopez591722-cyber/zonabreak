@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>CosteoChef × ZonaBreak</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root{--black:#0a0a0a;--white:#f5f5f5;--gold:#e8c547;--red:#e84b3a;--green:#2ecc71;--blue:#3498db;--orange:#e67e22;--gray:#141414;--gray2:#1c1c1c;--gray3:#252525;--text:#efefef;--muted:#666}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--black);color:var(--text);font-family:'Outfit',sans-serif;min-height:100vh}
+  
+  /* TOPBAR */
+  .topbar{background:var(--gray2);border-bottom:1px solid #222;display:flex;align-items:center;justify-content:space-between;padding:12px 20px;position:sticky;top:0;z-index:50}
+  .topbar-logo{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--gold)}
+  .topbar-links{display:flex;gap:8px}
+  .topbar-btn{background:none;border:1px solid #333;color:var(--muted);padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;text-decoration:none;display:inline-block}
+  .topbar-btn:hover{border-color:var(--gold);color:var(--gold)}
+
+  /* TABS */
+  .tabs{display:flex;background:var(--gray2);border-bottom:1px solid #1a1a1a;padding:0 16px;overflow-x:auto}
+  .tab{padding:13px 16px;font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;color:var(--muted);transition:all .2s;background:none;border-top:none;border-left:none;border-right:none;font-family:'Outfit',sans-serif}
+  .tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+  /* PANELS */
+  .panel{display:none;padding:20px;max-width:1100px;margin:0 auto}
+  .panel.active{display:block}
+
+  /* CARDS */
+  .sec-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--gold);margin-bottom:16px}
+  .sec-card{background:var(--gray2);border-radius:12px;padding:18px;margin-bottom:16px;border:1px solid #222}
+  .card-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;color:var(--white);margin-bottom:14px}
+
+  /* FORMS */
+  .form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:12px}
+  label.lbl{font-size:11px;color:var(--muted);display:block;margin-bottom:4px;font-weight:500;letter-spacing:.5px;text-transform:uppercase}
+  input.inp,select.inp{width:100%;background:#111;border:1px solid #2a2a2a;border-radius:8px;padding:9px 12px;color:var(--white);font-family:'Outfit',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
+  input.inp:focus,select.inp:focus{border-color:var(--gold)}
+  .btn-sm{border:none;border-radius:8px;padding:8px 16px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .2s}
+  .btn-sm:hover{opacity:.85}
+  .btn-green{background:var(--green);color:#fff}
+  .btn-red{background:var(--red);color:#fff}
+  .btn-blue{background:var(--blue);color:#fff}
+  .btn-orange{background:var(--orange);color:#fff}
+  .btn-gray{background:var(--gray3);color:var(--muted)}
+  .btn-gold{background:var(--gold);color:var(--black)}
+
+  /* TABLE */
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;padding:10px 12px;color:var(--muted);font-weight:600;border-bottom:1px solid #222;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+  td{padding:10px 12px;border-bottom:1px solid #1a1a1a;vertical-align:middle}
+  tr:hover td{background:rgba(255,255,255,.02)}
+  .tbl-wrap{overflow-x:auto;border-radius:10px;border:1px solid #222;margin-bottom:20px}
+
+  /* STATS */
+  .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+  .stat-card{background:var(--gray2);border-radius:12px;padding:16px;border:1px solid #222}
+  .stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+  .stat-value{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1px}
+  .stat-value.gold{color:var(--gold)}
+  .stat-value.green{color:var(--green)}
+  .stat-value.red{color:var(--red)}
+  .stat-value.blue{color:var(--blue)}
+
+  /* RECIPE BUILDER */
+  .recipe-line{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+  .recipe-line select{flex:1;background:#111;border:1px solid #2a2a2a;border-radius:8px;padding:8px 10px;color:var(--white);font-family:'Outfit',sans-serif;font-size:13px;outline:none}
+  .recipe-line input{width:90px;background:#111;border:1px solid #2a2a2a;border-radius:8px;padding:8px 10px;color:var(--white);font-family:'Outfit',sans-serif;font-size:13px;outline:none}
+  .recipe-line .ingr-cost{font-size:12px;color:var(--muted);min-width:70px;text-align:right}
+  .remove-line{background:none;border:none;color:var(--red);cursor:pointer;font-size:18px;padding:0 4px;line-height:1}
+
+  /* PLATE CARD */
+  .plate-card{background:var(--gray2);border-radius:10px;padding:14px;margin-bottom:10px;border:1px solid #222;display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:center}
+  .plate-name{font-weight:600;font-size:15px}
+  .plate-cat{font-size:11px;color:var(--muted)}
+  .plate-metric{text-align:right}
+  .plate-metric .label{font-size:10px;color:var(--muted);text-transform:uppercase}
+  .plate-metric .val{font-family:'Bebas Neue',sans-serif;font-size:18px}
+  .margin-badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700}
+  .margin-good{background:rgba(46,204,113,.2);color:var(--green)}
+  .margin-ok{background:rgba(232,197,71,.2);color:var(--gold)}
+  .margin-bad{background:rgba(232,75,58,.2);color:var(--red)}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--gray3);color:var(--white);padding:12px 20px;border-radius:20px;font-size:14px;font-weight:500;z-index:300;transition:transform .3s;white-space:nowrap;pointer-events:none}
+  .toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">🍽 COSTEO × ZONA BREAK</div>
+  <div class="topbar-links">
+    <a class="topbar-btn" href="/">Menú</a>
+    <a class="topbar-btn" href="/pos.html">POS</a>
+    <a class="topbar-btn" href="/admin.html">Admin</a>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('ingredients',this)">📦 Ingredientes</button>
+  <button class="tab" onclick="switchTab('plates',this)">🍳 Platos</button>
+  <button class="tab" onclick="switchTab('summary',this)">📊 Resumen</button>
+  <button class="tab" onclick="switchTab('sales',this)">📈 Ventas</button>
+</div>
+
+<!-- ══════════ INGREDIENTES ══════════ -->
+<div class="panel active" id="panelIngredients">
+  <div class="sec-title">INGREDIENTES / INSUMOS</div>
+  <div class="sec-card">
+    <div class="card-title">AGREGAR INGREDIENTE</div>
+    <div class="form-row">
+      <div><label class="lbl">Nombre *</label><input class="inp" id="iName" placeholder="Ej: Carne de res"/></div>
+      <div><label class="lbl">Precio compra *</label><input class="inp" id="iPrice" type="number" placeholder="0"/></div>
+      <div><label class="lbl">Cantidad comprada *</label><input class="inp" id="iQty" type="number" placeholder="1"/></div>
+      <div><label class="lbl">Unidad</label>
+        <select class="inp" id="iUnit">
+          <option value="g">gramos (g)</option>
+          <option value="kg">kilos (kg)</option>
+          <option value="ml">mililitros (ml)</option>
+          <option value="L">litros (L)</option>
+          <option value="unid" selected>unidades</option>
+          <option value="porcion">porción</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-sm btn-green" onclick="saveIngredient()">+ Guardar ingrediente</button>
+      <button class="btn-sm btn-gray" onclick="clearIngredientForm()">Limpiar</button>
+    </div>
+  </div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Ingrediente</th><th>Precio compra</th><th>Cantidad</th><th>Unidad</th><th>Costo/unidad</th><th>Acciones</th></tr></thead>
+      <tbody id="ingredientsTbody"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px">Cargando…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════ PLATOS ══════════ -->
+<div class="panel" id="panelPlates">
+  <div class="sec-title">COSTEO DE PLATOS</div>
+  <div class="sec-card">
+    <div class="card-title">CREAR / EDITAR PLATO</div>
+    <input type="hidden" id="editPlateId"/>
+    <div class="form-row">
+      <div><label class="lbl">Nombre del plato *</label><input class="inp" id="plateName" placeholder="Ej: Perro Caliente Especial"/></div>
+      <div><label class="lbl">Categoría</label><input class="inp" id="plateCat" placeholder="Ej: Perros"/></div>
+      <div><label class="lbl">Precio de venta *</label><input class="inp" id="plateSalePrice" type="number" placeholder="0" oninput="calcPlateMargin()"/></div>
+    </div>
+    <div style="margin-bottom:12px">
+      <label class="lbl" style="margin-bottom:8px">INGREDIENTES DE LA RECETA</label>
+      <div id="recipeLines"></div>
+      <button class="btn-sm btn-gray" onclick="addRecipeLine()" style="margin-top:8px">+ Agregar ingrediente</button>
+    </div>
+    <div id="plateCalcResult" style="background:#111;border-radius:8px;padding:12px;margin-bottom:12px;display:none">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;text-align:center">
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Costo total</div><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--red)" id="plateCalcCost">$0</div></div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Precio venta</div><div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--gold)" id="plateCalcSale">$0</div></div>
+        <div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Margen</div><div style="font-family:'Bebas Neue',sans-serif;font-size:22px" id="plateCalcMargin">—</div></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-sm btn-gold" onclick="savePlate()">💾 Guardar plato</button>
+      <button class="btn-sm btn-gray" onclick="clearPlateForm()">Nuevo plato</button>
+    </div>
+  </div>
+
+  <div id="platesList"></div>
+</div>
+
+<!-- ══════════ RESUMEN ══════════ -->
+<div class="panel" id="panelSummary">
+  <div class="sec-title">RESUMEN FINANCIERO</div>
+  <div class="stats-grid" id="summaryStats"></div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Plato</th><th>Categoría</th><th>Costo</th><th>Precio</th><th>Margen $</th><th>Margen %</th><th>Alerta</th></tr></thead>
+      <tbody id="summaryTbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════ VENTAS ══════════ -->
+<div class="panel" id="panelSales">
+  <div class="sec-title">VENTAS × COSTEO</div>
+  <div class="stats-grid" id="salesStats"></div>
+  <div class="tbl-wrap" id="salesDetail"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let ingredients = [];
+let plates = [];
+let recipeLines = [];
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+async function init() {
+  await loadIngredients();
+  await loadPlates();
+}
+init();
+
+// ─── TABS ─────────────────────────────────────────────────────────────────────
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel'+name.charAt(0).toUpperCase()+name.slice(1)).classList.add('active');
+  if(name==='summary') renderSummary();
+  if(name==='sales') loadSales();
+}
+
+// ─── INGREDIENTS ─────────────────────────────────────────────────────────────
+async function loadIngredients() {
+  try {
+    const r = await fetch('/api/costeo/ingredients');
+    ingredients = await r.json();
+    renderIngredients();
+    refreshRecipeSelects();
+  } catch(e) {
+    // Si no hay endpoint de costeo, usar inventario general
+    try {
+      const r2 = await fetch('/api/inventory');
+      const inv = await r2.json();
+      ingredients = inv.map(i=>({
+        _id: i._id||i.id,
+        name: i.name||i.nombre,
+        purchasePrice: (i.cost||i.costo||0) * (i.stock||i.stockActual||1),
+        purchaseQty: i.stock||i.stockActual||1,
+        unit: i.unit||i.unidad||'unid',
+        costPerUnit: i.cost||i.costo||0
+      }));
+      renderIngredients();
+      refreshRecipeSelects();
+    } catch(e2) { console.log('Sin inventario'); }
+  }
+}
+
+function renderIngredients() {
+  const tbody = document.getElementById('ingredientsTbody');
+  if(!ingredients.length) { tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px">Sin ingredientes. Agrega uno arriba ↑</td></tr>'; return; }
+  tbody.innerHTML = ingredients.map(i => {
+    const cpu = i.costPerUnit || (i.purchaseQty>0 ? i.purchasePrice/i.purchaseQty : 0);
+    return `<tr>
+      <td><b>${i.name}</b></td>
+      <td>${fmt(i.purchasePrice)}</td>
+      <td>${i.purchaseQty} ${i.unit}</td>
+      <td>${i.unit}</td>
+      <td style="color:var(--gold);font-weight:700">${fmt(cpu)}/${i.unit}</td>
+      <td><button class="btn-sm btn-red" style="padding:4px 8px;font-size:11px" onclick="deleteIngredient('${i._id||i.id}')">🗑</button></td>
+    </tr>`;
+  }).join('');
+}
+
+async function saveIngredient() {
+  const name = document.getElementById('iName').value.trim();
+  const price = Number(document.getElementById('iPrice').value);
+  const qty = Number(document.getElementById('iQty').value)||1;
+  const unit = document.getElementById('iUnit').value;
+  if(!name||!price) { showToast('Nombre y precio son obligatorios'); return; }
+  const cpu = price/qty;
+  try {
+    const r = await fetch('/api/costeo/ingredients', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({name, purchasePrice:price, purchaseQty:qty, unit, costPerUnit:cpu})
+    });
+    const saved = await r.json();
+    ingredients.push(saved);
+    renderIngredients();
+    refreshRecipeSelects();
+    clearIngredientForm();
+    showToast(`${name} guardado ✓`);
+  } catch(e) {
+    // Fallback: guardar en inventario general
+    try {
+      await fetch('/api/inventory', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name, stock:qty, unit, cost:cpu})});
+      await loadIngredients();
+      clearIngredientForm();
+      showToast(`${name} guardado en inventario ✓`);
+    } catch(e2) { showToast('Error al guardar'); }
+  }
+}
+
+function clearIngredientForm() {
+  ['iName','iPrice','iQty'].forEach(id=>document.getElementById(id).value='');
+}
+
+async function deleteIngredient(id) {
+  if(!confirm('¿Eliminar ingrediente?')) return;
+  try {
+    await fetch(`/api/costeo/ingredients/${id}`, {method:'DELETE'});
+    ingredients = ingredients.filter(i=>(i._id||i.id)!==id);
+    renderIngredients();
+    refreshRecipeSelects();
+    showToast('Eliminado ✓');
+  } catch(e) { showToast('Error'); }
+}
+
+// ─── RECIPE BUILDER ───────────────────────────────────────────────────────────
+function addRecipeLine() {
+  const id = Date.now();
+  recipeLines.push({lineId:id, ingrId:'', qty:0});
+  renderRecipeLines();
+}
+
+function renderRecipeLines() {
+  const opts = ingredients.map(i=>`<option value="${i._id||i.id}">${i.name} (${fmt(i.costPerUnit||0)}/${i.unit})</option>`).join('');
+  document.getElementById('recipeLines').innerHTML = recipeLines.map((line,idx)=>`
+    <div class="recipe-line" id="rl_${line.lineId}">
+      <select onchange="updateLine(${idx},'ingrId',this.value);calcPlateMargin()">
+        <option value="">— Seleccionar ingrediente —</option>
+        ${opts}
+      </select>
+      <input type="number" placeholder="Cantidad" min="0" step="0.01" value="${line.qty||''}"
+        onchange="updateLine(${idx},'qty',Number(this.value));calcPlateMargin()"/>
+      <span class="ingr-cost" id="lineCost_${idx}">${calcLineCost(line)}</span>
+      <button class="remove-line" onclick="removeLine(${idx})">×</button>
+    </div>`).join('');
+  // Re-select existing values
+  recipeLines.forEach((line,idx)=>{
+    const sel = document.getElementById('recipeLines').querySelectorAll('select')[idx];
+    if(sel && line.ingrId) sel.value=line.ingrId;
+  });
+}
+
+function updateLine(idx, key, val) {
+  recipeLines[idx][key]=val;
+  const span = document.getElementById(`lineCost_${idx}`);
+  if(span) span.textContent = calcLineCost(recipeLines[idx]);
+}
+
+function calcLineCost(line) {
+  if(!line.ingrId||!line.qty) return '—';
+  const ingr = ingredients.find(i=>(i._id||i.id)===line.ingrId);
+  if(!ingr) return '—';
+  return fmt((ingr.costPerUnit||0)*line.qty);
+}
+
+function removeLine(idx) {
+  recipeLines.splice(idx,1);
+  renderRecipeLines();
+  calcPlateMargin();
+}
+
+function refreshRecipeSelects() { renderRecipeLines(); }
+
+function calcTotalCost() {
+  return recipeLines.reduce((s,line)=>{
+    if(!line.ingrId||!line.qty) return s;
+    const ingr = ingredients.find(i=>(i._id||i.id)===line.ingrId);
+    return s + ((ingr?.costPerUnit||0)*line.qty);
+  },0);
+}
+
+function calcPlateMargin() {
+  const cost = calcTotalCost();
+  const sale = Number(document.getElementById('plateSalePrice').value)||0;
+  const resultEl = document.getElementById('plateCalcResult');
+  if(cost>0||sale>0) {
+    resultEl.style.display='block';
+    document.getElementById('plateCalcCost').textContent = fmt(cost);
+    document.getElementById('plateCalcSale').textContent = fmt(sale);
+    const margin = sale>0 ? Math.round(((sale-cost)/sale)*100) : 0;
+    const mEl = document.getElementById('plateCalcMargin');
+    mEl.textContent = sale>0 ? `${margin}%` : '—';
+    mEl.style.color = margin>=50?'var(--green)':margin>=30?'var(--gold)':'var(--red)';
+  } else {
+    resultEl.style.display='none';
+  }
+}
+
+// ─── PLATES ───────────────────────────────────────────────────────────────────
+async function loadPlates() {
+  try {
+    const r = await fetch('/api/costeo/plates');
+    plates = await r.json();
+    renderPlatesList();
+  } catch(e) { plates=[]; renderPlatesList(); }
+}
+
+function renderPlatesList() {
+  const el = document.getElementById('platesList');
+  if(!plates.length) { el.innerHTML='<div style="color:var(--muted);text-align:center;padding:32px">Sin platos costeados. Crea uno arriba ↑</div>'; return; }
+  el.innerHTML = '<div class="card-title" style="margin:16px 0 12px;font-family:\'Bebas Neue\',sans-serif;font-size:16px;letter-spacing:1px;color:var(--white)">PLATOS GUARDADOS</div>' +
+    plates.map(p=>{
+      const cost=p.totalCost||p.costoTotal||0;
+      const sale=p.salePrice||p.precio||0;
+      const margin=sale>0?Math.round(((sale-cost)/sale)*100):0;
+      const marginCls=margin>=50?'margin-good':margin>=30?'margin-ok':'margin-bad';
+      return `<div class="plate-card">
+        <div>
+          <div class="plate-name">${p.name||p.nombre}</div>
+          <div class="plate-cat">${p.category||p.categoria||'Sin categoría'}</div>
+        </div>
+        <div class="plate-metric"><div class="label">Costo</div><div class="val" style="color:var(--red)">${fmt(cost)}</div></div>
+        <div class="plate-metric"><div class="label">Precio</div><div class="val" style="color:var(--gold)">${fmt(sale)}</div></div>
+        <div class="plate-metric">
+          <div class="label">Margen</div>
+          <span class="margin-badge ${marginCls}">${margin}%</span>
+          <div style="display:flex;gap:6px;margin-top:8px;justify-content:flex-end">
+            <button class="btn-sm btn-blue" style="padding:4px 8px;font-size:11px" onclick="editPlate('${p._id||p.id}')">✏️</button>
+            <button class="btn-sm btn-red" style="padding:4px 8px;font-size:11px" onclick="deletePlate('${p._id||p.id}')">🗑</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+}
+
+async function savePlate() {
+  const name = document.getElementById('plateName').value.trim();
+  const salePrice = Number(document.getElementById('plateSalePrice').value);
+  if(!name) { showToast('Ingresa el nombre del plato'); return; }
+  const cost = calcTotalCost();
+  const recipe = recipeLines.filter(l=>l.ingrId&&l.qty).map(l=>{
+    const ingr=ingredients.find(i=>(i._id||i.id)===l.ingrId);
+    return {ingredientId:l.ingrId,name:ingr?.name||'',qty:l.qty,unit:ingr?.unit||'',costPerUnit:ingr?.costPerUnit||0,lineCost:(ingr?.costPerUnit||0)*l.qty};
+  });
+  const data = {name, category:document.getElementById('plateCat').value, salePrice, totalCost:cost, recipe};
+  const editId = document.getElementById('editPlateId').value;
+  try {
+    if(editId) {
+      const r=await fetch(`/api/costeo/plates/${editId}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+      const updated=await r.json();
+      plates=plates.map(p=>(p._id||p.id)===editId?updated:p);
+      showToast('Plato actualizado ✓');
+    } else {
+      const r=await fetch('/api/costeo/plates',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+      const saved=await r.json();
+      plates.push(saved);
+      showToast(`${name} guardado ✓`);
+    }
+    renderPlatesList();
+    clearPlateForm();
+  } catch(e) { showToast('Error al guardar plato'); }
+}
+
+function editPlate(id) {
+  const p=plates.find(x=>(x._id||x.id)===id); if(!p) return;
+  document.getElementById('editPlateId').value=id;
+  document.getElementById('plateName').value=p.name||p.nombre||'';
+  document.getElementById('plateCat').value=p.category||p.categoria||'';
+  document.getElementById('plateSalePrice').value=p.salePrice||p.precio||0;
+  recipeLines = (p.recipe||[]).map(l=>({lineId:Date.now()+Math.random(),ingrId:l.ingredientId||l._id||'',qty:l.qty}));
+  renderRecipeLines();
+  calcPlateMargin();
+  switchTab('plates', document.querySelector('.tab:nth-child(2)'));
+  window.scrollTo(0,0);
+  showToast('Plato cargado para edición');
+}
+
+async function deletePlate(id) {
+  if(!confirm('¿Eliminar plato?')) return;
+  try{
+    await fetch(`/api/costeo/plates/${id}`,{method:'DELETE'});
+    plates=plates.filter(p=>(p._id||p.id)!==id);
+    renderPlatesList();
+    showToast('Eliminado ✓');
+  }catch(e){showToast('Error');}
+}
+
+function clearPlateForm() {
+  document.getElementById('editPlateId').value='';
+  document.getElementById('plateName').value='';
+  document.getElementById('plateCat').value='';
+  document.getElementById('plateSalePrice').value='';
+  recipeLines=[];
+  renderRecipeLines();
+  document.getElementById('plateCalcResult').style.display='none';
+}
+
+// ─── SUMMARY ──────────────────────────────────────────────────────────────────
+function renderSummary() {
+  if(!plates.length){ document.getElementById('summaryTbody').innerHTML='<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:30px">Sin platos costeados</td></tr>'; return; }
+  const avgMargin=plates.reduce((s,p)=>{const c=p.totalCost||0;const v=p.salePrice||0;return s+(v>0?((v-c)/v)*100:0)},0)/plates.length;
+  const highMargin=plates.filter(p=>{const c=p.totalCost||0;const v=p.salePrice||0;return v>0&&((v-c)/v)*100>=50}).length;
+  const lowMargin=plates.filter(p=>{const c=p.totalCost||0;const v=p.salePrice||0;return v>0&&((v-c)/v)*100<30}).length;
+  document.getElementById('summaryStats').innerHTML=`
+    <div class="stat-card"><div class="stat-label">Platos costeados</div><div class="stat-value gold">${plates.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Margen prom.</div><div class="stat-value green">${Math.round(avgMargin)}%</div></div>
+    <div class="stat-card"><div class="stat-label">Buen margen (≥50%)</div><div class="stat-value green">${highMargin}</div></div>
+    <div class="stat-card"><div class="stat-label">Margen bajo (<30%)</div><div class="stat-value red">${lowMargin}</div></div>`;
+  document.getElementById('summaryTbody').innerHTML=plates.map(p=>{
+    const cost=p.totalCost||0; const sale=p.salePrice||0;
+    const margin=sale>0?Math.round(((sale-cost)/sale)*100):0;
+    const diff=sale-cost;
+    const cls=margin>=50?'margin-good':margin>=30?'margin-ok':'margin-bad';
+    const alert=margin<30?'⚠️ Revisar precio':margin<50?'✓ Aceptable':'✅ Excelente';
+    return `<tr>
+      <td><b>${p.name||p.nombre}</b></td>
+      <td>${p.category||p.categoria||'—'}</td>
+      <td style="color:var(--red)">${fmt(cost)}</td>
+      <td style="color:var(--gold);font-weight:700">${fmt(sale)}</td>
+      <td style="color:var(--green)">${fmt(diff)}</td>
+      <td><span class="margin-badge ${cls}">${margin}%</span></td>
+      <td style="font-size:12px">${alert}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── SALES ────────────────────────────────────────────────────────────────────
+async function loadSales() {
+  try {
+    const r = await fetch('/api/orders?limit=200');
+    const orders = await r.json();
+    const now=new Date(),today=new Date(now.getFullYear(),now.getMonth(),now.getDate()),monthStart=new Date(today);monthStart.setDate(1);
+    const monthOrders = orders.filter(o=>new Date(o.createdAt)>=monthStart);
+    const revenue = monthOrders.reduce((s,o)=>s+(o.total||0),0);
+    // Calcular COGS aproximado
+    let totalCogs=0;
+    monthOrders.forEach(o=>{
+      (o.items||[]).forEach(item=>{
+        const plate=plates.find(p=>(p.name||p.nombre)===item.name);
+        if(plate) totalCogs+=(plate.totalCost||0)*item.qty;
+      });
+    });
+    const grossProfit=revenue-totalCogs;
+    const gpm=revenue>0?Math.round((grossProfit/revenue)*100):0;
+    document.getElementById('salesStats').innerHTML=`
+      <div class="stat-card"><div class="stat-label">Ventas (mes)</div><div class="stat-value gold">${fmt(revenue)}</div></div>
+      <div class="stat-card"><div class="stat-label">Costo estimado</div><div class="stat-value red">${fmt(totalCogs)}</div></div>
+      <div class="stat-card"><div class="stat-label">Utilidad bruta</div><div class="stat-value green">${fmt(grossProfit)}</div></div>
+      <div class="stat-card"><div class="stat-label">Margen bruto</div><div class="stat-value ${gpm>=40?'green':gpm>=25?'gold':'red'}">${gpm}%</div></div>`;
+    // Top platos
+    const salesByPlate={};
+    monthOrders.forEach(o=>(o.items||[]).forEach(item=>{
+      salesByPlate[item.name]=(salesByPlate[item.name]||{name:item.name,qty:0,revenue:0});
+      salesByPlate[item.name].qty+=item.qty;
+      salesByPlate[item.name].revenue+=item.price*item.qty;
+    }));
+    const sorted=Object.values(salesByPlate).sort((a,b)=>b.qty-a.qty);
+    document.getElementById('salesDetail').innerHTML=`<table>
+      <thead><tr><th>Plato</th><th>Unidades vendidas</th><th>Ingresos</th><th>Costo estimado</th><th>Margen</th></tr></thead>
+      <tbody>${sorted.map(s=>{
+        const plate=plates.find(p=>(p.name||p.nombre)===s.name);
+        const cogs=plate?(plate.totalCost||0)*s.qty:0;
+        const m=s.revenue>0?Math.round(((s.revenue-cogs)/s.revenue)*100):0;
+        return `<tr><td><b>${s.name}</b></td><td>${s.qty}</td><td style="color:var(--gold)">${fmt(s.revenue)}</td><td style="color:var(--red)">${cogs>0?fmt(cogs):'—'}</td><td>${cogs>0?`<span class="margin-badge ${m>=50?'margin-good':m>=30?'margin-ok':'margin-bad'}">${m}%</span>`:'—'}</td></tr>`;
+      }).join('')}</tbody>
+    </table>`;
+  } catch(e) { showToast('Error cargando ventas'); }
+}
+
+// ─── UTILS ────────────────────────────────────────────────────────────────────
+function fmt(n){ return '$'+Number(n||0).toLocaleString('es-CO'); }
+function showToast(msg,dur=2500){ const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur); }
+</script>
+</body>
+</html>
+<script>
+// Patch: inject auth token into all fetch calls
+const _origFetch = window.fetch;
+window.fetch = function(url, opts={}) {
+  const token = sessionStorage.getItem('zb_token');
+  if (token && typeof url === 'string' && url.startsWith('/api')) {
+    opts.headers = { ...opts.headers, 'Authorization': 'Bearer ' + token };
+  }
+  return _origFetch(url, opts);
+};
+</script>

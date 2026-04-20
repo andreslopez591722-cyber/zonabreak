@@ -54,7 +54,7 @@ app.use(express.static(frontendDir));
 app.use('/components', express.static(path.join(rootDir, 'components')));
 
 app.get('*', (req, res) => {
-  if (!req.path.includes('.') && !req.path.startsWith('/api')) {
+  if (!req.path.startsWith('/api')) {
     return res.sendFile(path.join(frontendDir, 'index.html'));
   }
   res.status(404).json({ error: 'Not found' });
